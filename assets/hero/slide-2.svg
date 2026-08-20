@@ -1,0 +1,21 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Placeholder hero 2">
+  <defs>
+    <linearGradient id="bg2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#161b17"/>
+      <stop offset="0.7" stop-color="#0b0e0c"/>
+      <stop offset="1" stop-color="#6f8b3f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg2)"/>
+  <g stroke="#c8e85c" stroke-width="1.5" fill="none" opacity="0.5">
+    <polygon points="1250,300 1330,255 1410,300 1410,390 1330,435 1250,390"/>
+    <polygon points="1330,435 1410,390 1490,435 1490,525 1410,570 1330,525"/>
+    <polygon points="1170,435 1250,390 1330,435 1330,525 1250,570 1170,525"/>
+  </g>
+  <g stroke="#a7b1ac" stroke-width="1" opacity="0.2">
+    <line x1="200" y1="0" x2="200" y2="900"/>
+    <line x1="260" y1="0" x2="260" y2="900"/>
+  </g>
+  <circle cx="1330" cy="435" r="6" fill="#e4eae6"/>
+  <text x="80" y="840" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#a7b1ac" opacity="0.5">[IMAGEN PLACEHOLDER 2 — reemplazar]</text>
+</svg>

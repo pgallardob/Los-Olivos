@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+server/.env
+server/avisos.json
+backend/.env
+backend/logs/
+backend/data/productos.json
+backend/data/productos.previous.json
+*.local
+.DS_Store
+Thumbs.db

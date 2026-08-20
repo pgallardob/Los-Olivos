@@ -1,0 +1,24 @@
+{
+  "nombre": "Comercializadora Los Olivos",
+  "direccion": "Concordia 408 Local A, Peñaflor, Santiago, Chile",
+  "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=Concordia+408+Local+A,+Peñaflor,+Santiago,+Chile",
+  "telefono": "+569 64 19 4547 - +569 30 74 8991",
+  "whatsapp": "+569 6419 4547",
+  "horarios": {
+    "lunes": "10:00 - 20:00",
+    "martes": "10:00 - 20:00",
+    "miercoles": "10:00 - 20:00",
+    "jueves": "10:00 - 20:00",
+    "viernes": "10:00 - 20:00",
+    "sabado": "10:00 - 20:00",
+    "domingo": "Cerrado"
+  },
+  "redes": {
+    "instagram": "https://www.instagram.com/comercializadora_los_olivos_",
+    "whatsapp": "https://wa.me/56964194547"
+  },
+  "pedidos": "Puedes hacer tu pedido directamente por WhatsApp al +569 6419 4547 o visitándonos en el local. No tenemos pedido online en la página.",
+  "delivery": "Hacemos entregas a domicilio en Peñaflor y alrededores. Coordiná la entrega por WhatsApp al +569 6419 4547.",
+  "metodos_pago": "Aceptamos efectivo, transferencia bancaria y tarjetas débito/crédito.",
+  "info_general": "Somos un almacén de barrio en Peñaflor con variedad de productos: abarrotes, bebidas, limpieza, lácteos y más. Atendemos de lunes a sábado de 10:00 a 20:00."
+}

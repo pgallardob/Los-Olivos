@@ -1,0 +1,21 @@
+{
+  "name": "los-olivos-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend para envío de avisos por email — Comercializadora Los Olivos",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "resend": "^4.8.0"
+  }
+}

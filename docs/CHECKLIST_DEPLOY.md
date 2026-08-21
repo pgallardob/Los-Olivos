@@ -183,10 +183,24 @@ Después de que Render asigne las URLs finales:
 
 ## 8. Pendientes
 
-1. **Verificar dominio en Resend**: para enviar emails desde `paulinacontreras@comercializadoralosolivos.cl` en lugar de `onboarding@resend.dev`
-2. **Google Search Console**: agregar propiedad `comercializadoralosolivos.cl` y enviar sitemap
-3. **Google My Business**: reclamar/crear ficha del negocio para Google Maps
-4. **Limpiar archivos temporales**: borrar `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`, `dist-update.zip`
+### 8.1 Verificar dominio en Resend (EN PROGRESO)
+- [x] Agregar dominio `comercializadoralosolivos.cl` en https://resend.com/domains
+- [x] Agregar registro DKIM (TXT) → `resend._domainkey` en zona DNS del panel Webuzo
+- [x] Agregar registro CNAME → `rsend` → `rsend.forge.rmta.net`
+- [x] Agregar registro CNAME → `send` → `send.forge.rmta.net`
+- [ ] **Click "Verify" en Resend** — esperar verificación (puede tardar minutos a horas)
+- [ ] Una vez verificado, actualizar `MAIL_FROM` en Render (servicio avisos) a `Los Olivos <paulinacontreras@comercializadoralosolivos.cl>`
+- [ ] Probar envío de aviso desde el sitio
+
+### 8.2 Google Search Console
+- [ ] Agregar propiedad `comercializadoralosolivos.cl` en https://search.google.com/search-console
+- [ ] Enviar sitemap: `https://comercializadoralosolivos.cl/sitemap.xml`
+
+### 8.3 Google My Business
+- [ ] Crear ficha del negocio en Google Maps para búsquedas locales en Peñaflor
+
+### 8.4 Limpieza
+- [ ] Borrar archivos temporales: `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`, `dist-update.zip`
 
 ---
 

@@ -26,11 +26,11 @@ export function getSyncStatus() {
 
 function logSync(message) {
   const line = `${new Date().toISOString()} - ${message}\n`;
-  ensureDir(LOGS_DIR);
   try {
+    ensureDir(LOGS_DIR);
     appendFileSync(SYNC_LOG_PATH, line, 'utf-8');
   } catch {
-    // Si no se puede escribir log, continuar
+    // Si no se puede escribir log (filesystem efímero), continuar
   }
   console.log(`[sync] ${message}`);
 }

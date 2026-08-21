@@ -49,11 +49,19 @@ app.use((err, _req, res, _next) => {
 
 // ─── Inicio ───
 async function start() {
-  // Cargar catálogo en memoria si existe
-  await loadCatalog();
+  // Cargar catálogo en memoria si existe (no fallar si no hay archivo)
+  try {
+    await loadCatalog();
+  } catch (err) {
+    console.warn('[server] loadCatalog falló (no crítico):', err.message);
+  }
 
-  // Iniciar scheduler de sincronización
-  initScheduler();
+  // Iniciar scheduler de sincronización (no fallar si no puede escribir logs)
+  try {
+    initScheduler();
+  } catch (err) {
+    console.warn('[server] initScheduler falló (no crítico):', err.message);
+  }
 
   app.listen(config.port, () => {
     console.log(`[server] Chatbot backend en http://localhost:${config.port}`);

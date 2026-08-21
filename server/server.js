@@ -120,7 +120,27 @@ app.post('/api/aviso', async (req, res) => {
   }
 });
 
+// ─── Keep-alive: ping mutuo cada 5 minutos para evitar sleep en Render ───
+const KEEP_ALIVE_URL = process.env.KEEP_ALIVE_URL || 'https://los-olivos-chatbot.onrender.com/api/health';
+const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutos
+
+function startKeepAlive() {
+  setInterval(async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(KEEP_ALIVE_URL, { signal: controller.signal });
+      clearTimeout(timeout);
+      console.log(`[keep-alive] Ping a ${KEEP_ALIVE_URL}: ${res.status}`);
+    } catch (err) {
+      console.warn(`[keep-alive] Ping falló: ${err.message}`);
+    }
+  }, KEEP_ALIVE_INTERVAL);
+  console.log(`[keep-alive] Activo: ping cada 5 min a ${KEEP_ALIVE_URL}`);
+}
+
 app.listen(PORT, () => {
   console.log(`Backend corriendo en http://localhost:${PORT}`);
   console.log(`Supabase: ${supabase ? 'conectado' : 'no configurado'}`);
+  startKeepAlive();
 });

@@ -47,6 +47,25 @@ app.use((err, _req, res, _next) => {
   });
 });
 
+// ─── Keep-alive: ping mutuo cada 5 minutos para evitar sleep en Render ───
+const KEEP_ALIVE_URL = process.env.KEEP_ALIVE_URL || 'https://los-olivos-avisos.onrender.com/health';
+const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutos
+
+function startKeepAlive() {
+  setInterval(async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(KEEP_ALIVE_URL, { signal: controller.signal });
+      clearTimeout(timeout);
+      console.log(`[keep-alive] Ping a ${KEEP_ALIVE_URL}: ${res.status}`);
+    } catch (err) {
+      console.warn(`[keep-alive] Ping falló: ${err.message}`);
+    }
+  }, KEEP_ALIVE_INTERVAL);
+  console.log(`[keep-alive] Activo: ping cada 5 min a ${KEEP_ALIVE_URL}`);
+}
+
 // ─── Inicio ───
 async function start() {
   // Cargar catálogo en memoria si existe (no fallar si no hay archivo)
@@ -66,6 +85,7 @@ async function start() {
   app.listen(config.port, () => {
     console.log(`[server] Chatbot backend en http://localhost:${config.port}`);
     console.log(`[server] TZ=${config.timezone} | provider=${config.ai.provider}`);
+    startKeepAlive();
   });
 }
 

@@ -1,6 +1,6 @@
 # Checklist de Despliegue — Comercializadora Los Olivos
 
-## Estado del proyecto: ✅ Listo para subir
+## Estado del proyecto: ⏳ Despliegue en progreso — pendiente propagación de dominio
 
 ---
 
@@ -8,7 +8,7 @@
 
 | Componente | Plataforma | Costo |
 |---|---|---|
-| **Frontend** (HTML/CSS/JS estático) | administrable.cl plan $5.990/año | $5.990/año |
+| **Frontend** (HTML/CSS/JS estático) | administrable.cl (Webuzo) | $5.990/año |
 | **Backend Chatbot** (Node.js + Gemini) | Render.com free | $0 |
 | **Backend Avisos** (Node.js + Resend) | Render.com free | $0 |
 | **Base de datos + imágenes** | Supabase free | $0 |
@@ -96,10 +96,11 @@ Después de que Render asigne las URLs finales:
 
 ## 3. Subir frontend a administrable.cl
 
-1. Entrar al panel de administrable.cl (cPanel)
+1. Entrar al panel de administrable.cl (Webuzo — https://server.001webhospedaje.com:2003)
 2. **File Manager** → `public_html`
-3. Subir todo el contenido de `dist/` (arrastrar los archivos)
-4. Asegurar que `index.html`, `productos.html`, `avisos.html`, `robots.txt`, `sitemap.xml` y la carpeta `assets/` estén en `public_html`
+3. Subir todo el contenido de `dist/` (arrastrar los archivos, NO la carpeta dist completa)
+4. Asegurar que `index.html`, `productos.html`, `avisos.html`, `robots.txt`, `sitemap.xml` y la carpeta `assets/` estén directamente en `public_html`
+5. **Borrar la carpeta `dist`** si se subió accidentalmente dentro de `public_html` (los archivos ya están sueltos)
 
 ---
 
@@ -124,19 +125,23 @@ Después de que Render asigne las URLs finales:
 ## 5. Cosas a verificar/ajustar
 
 ### Antes del primer build de producción:
-- [ ] **Tabla `avisos`** creada en Supabase (ejecutar `docs/supabase-avisos.sql`)
-- [ ] **`VITE_CONTACT_EMAIL`**: cambiar `contacto@ejemplo.com` por tu email real
+- [x] **Tabla `avisos`** creada en Supabase (ejecutar `docs/supabase-avisos.sql`)
+- [x] **`VITE_CONTACT_EMAIL`**: cambiado a `contacto@comercializadoralosolivos.cl`
 - [ ] **`VITE_SOCIAL_TIKTOK`**: está vacío, agregar si tienes cuenta
 - [ ] **`VITE_SOCIAL_FACEBOOK`**: está vacío, agregar si tienes cuenta
 - [ ] **`VITE_SOCIAL_LINKS_*`**: todos vacíos, agregar si tienes
 
 ### Después de desplegar backends en Render:
-- [ ] **Probar health check chatbot**: `https://los-olivos-chatbot.onrender.com/api/health`
-- [ ] **Probar health check avisos**: `https://los-olivos-avisos.onrender.com/health`
-- [ ] **Actualizar URLs de Render en `.env`** del frontend
-- [ ] **Rehacer build** (`npx vite build`)
+- [x] **Probar health check chatbot**: `https://los-olivos-chatbot.onrender.com/api/health` ✅
+- [x] **Probar health check avisos**: `https://los-olivos-avisos.onrender.com/health` ✅
+- [x] **Actualizar URLs de Render en `.env`** del frontend ✅
+- [x] **Rehacer build** (`npx vite build`) ✅
 
 ### Después de subir a administrable.cl:
+- [x] **Archivos subidos** a `public_html` ✅
+- [x] **Dominio agregado** en panel de administrable.cl ✅
+- [x] **Nameservers cambiados** en nic.cl → `ns1.001webhospedaje.com` / `ns2.001webhospedaje.com` ✅
+- [ ] **Propagación del dominio** (esperar 2-24 hrs) ⏳
 - [ ] **Probar que el sitio carga** en `https://comercializadoralosolivos.cl`
 - [ ] **Probar el catálogo** en `/productos.html` (deben cargar los productos con imágenes desde Supabase)
 - [ ] **Probar el chatbot** (botón flotante abajo a la derecha)
@@ -161,6 +166,22 @@ Después de que Render asigne las URLs finales:
 - **Dominio en metas**: configurado como `comercializadoralosolivos.cl` en canonical, og:url, sitemap, robots.txt y JSON-LD.
 - **Build**: ejecutar `npx vite build` después de cambiar `.env`.
 - **render.yaml**: archivo de configuración para desplegar ambos backends de una sola vez en Render.
+- **Hosting**: administrable.cl usa panel Webuzo (no cPanel). URL del panel: `https://server.001webhospedaje.com:2003`
+- **FTP**: Host `server.001webhospedaje.com:21`, usuario `yftqrecu` (credenciales en email de bienvenida)
+- **Nameservers**: `ns1.001webhospedaje.com` / `ns2.001webhospedaje.com` (136.243.227.82)
+
+---
+
+## 8. Pendientes para mañana
+
+1. **Verificar propagación del dominio**: abrir `https://comercializadoralosolivos.cl` — si no carga, esperar más
+2. **Actualizar CORS en Render** cuando el dominio funcione:
+   - Chatbot → Environment → `CORS_ALLOWED_ORIGINS` = `https://comercializadoralosolivos.cl`
+   - Avisos → Environment → `CLIENT_ORIGIN` = `https://comercializadoralosolivos.cl`
+3. **Verificar SSL**: el panel emite certificado Let's Encrypt automáticamente
+4. **Probar funcionalidades**: chatbot, formulario de avisos, catálogo de productos
+5. **Verificar dominio en Resend**: para enviar emails desde `contacto@comercializadoralosolivos.cl`
+6. **Limpiar archivos temporales**: borrar `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`
 
 ---
 

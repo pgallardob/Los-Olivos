@@ -59,82 +59,106 @@ function startCountdown(el: HTMLElement, expiresAt: string): void {
   tick();
 }
 
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function loadAvisos(): Promise<void> {
   const container = document.getElementById('avisos-list');
 
   if (!container) return;
 
-  try {
-    const res = await fetch(`${API_BASE}/api/avisos`);
+  const maxRetries = 3;
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 1) {
+        container.innerHTML = `<p class="avisos-loading">Reintentando (${attempt}/${maxRetries})…</p>`;
+      }
 
-    const avisos: Aviso[] = await res.json();
+      const res = await fetchWithTimeout(`${API_BASE}/api/avisos`, 60000);
 
-    if (avisos.length === 0) {
-      container.innerHTML = '<p class="avisos-empty">No hay avisos publicados todavía.</p>';
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const avisos: Aviso[] = await res.json();
+
+      if (avisos.length === 0) {
+        container.innerHTML = '<p class="avisos-empty">No hay avisos publicados todavía.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      for (const aviso of avisos) {
+        const card = document.createElement('article');
+        card.className = 'aviso-card';
+
+        const header = document.createElement('div');
+        header.className = 'aviso-card-header';
+
+        const name = document.createElement('h3');
+        name.className = 'aviso-card-name';
+        name.textContent = aviso.name;
+        header.appendChild(name);
+
+        const email = document.createElement('span');
+        email.className = 'aviso-card-email';
+        email.textContent = aviso.email;
+        header.appendChild(email);
+
+        card.appendChild(header);
+
+        const body = document.createElement('p');
+        body.className = 'aviso-card-body';
+        body.textContent = aviso.comment;
+        card.appendChild(body);
+
+        const footer = document.createElement('div');
+        footer.className = 'aviso-card-footer';
+
+        const dateStr = aviso.date || aviso.created_at;
+        if (dateStr) {
+          const date = document.createElement('time');
+          date.className = 'aviso-card-date';
+          const d = new Date(dateStr);
+          date.textContent = d.toLocaleDateString('es-CL', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          });
+          footer.appendChild(date);
+        }
+
+        const expiresStr = aviso.expiresAt || aviso.expires_at;
+        if (expiresStr) {
+          const countdown = document.createElement('span');
+          countdown.className = 'aviso-countdown';
+          footer.appendChild(countdown);
+          startCountdown(countdown, expiresStr);
+        }
+
+        card.appendChild(footer);
+
+        container.appendChild(card);
+      }
+
       return;
-    }
-
-    container.innerHTML = '';
-
-    for (const aviso of avisos) {
-      const card = document.createElement('article');
-      card.className = 'aviso-card';
-
-      const header = document.createElement('div');
-      header.className = 'aviso-card-header';
-
-      const name = document.createElement('h3');
-      name.className = 'aviso-card-name';
-      name.textContent = aviso.name;
-      header.appendChild(name);
-
-      const email = document.createElement('span');
-      email.className = 'aviso-card-email';
-      email.textContent = aviso.email;
-      header.appendChild(email);
-
-      card.appendChild(header);
-
-      const body = document.createElement('p');
-      body.className = 'aviso-card-body';
-      body.textContent = aviso.comment;
-      card.appendChild(body);
-
-      const footer = document.createElement('div');
-      footer.className = 'aviso-card-footer';
-
-      const dateStr = aviso.date || aviso.created_at;
-      if (dateStr) {
-        const date = document.createElement('time');
-        date.className = 'aviso-card-date';
-        const d = new Date(dateStr);
-        date.textContent = d.toLocaleDateString('es-CL', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-        });
-        footer.appendChild(date);
+    } catch (err) {
+      console.error(`Error al cargar avisos (intento ${attempt}):`, err);
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 3000));
       }
-
-      const expiresStr = aviso.expiresAt || aviso.expires_at;
-      if (expiresStr) {
-        const countdown = document.createElement('span');
-        countdown.className = 'aviso-countdown';
-        footer.appendChild(countdown);
-        startCountdown(countdown, expiresStr);
-      }
-
-      card.appendChild(footer);
-
-      container.appendChild(card);
     }
-  } catch (err) {
-    console.error('Error al cargar avisos:', err);
-    container.innerHTML =
-      '<p class="avisos-error">No se pudieron cargar los avisos. Intenta más tarde.</p>';
   }
+
+  container.innerHTML =
+    '<p class="avisos-error">No se pudieron cargar los avisos. Intenta más tarde.</p>';
 }
 
 loadAvisos();

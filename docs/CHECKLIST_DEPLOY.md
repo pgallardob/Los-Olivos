@@ -1,6 +1,6 @@
 # Checklist de Despliegue — Comercializadora Los Olivos
 
-## Estado del proyecto: ⏳ Despliegue en progreso — pendiente propagación de dominio
+## Estado del proyecto: ✅ Desplegado y funcionando
 
 ---
 
@@ -26,7 +26,7 @@
 ### 1.2 Configurar variables del frontend (`.env`)
 | Variable | Cambiar a |
 |---|---|
-| `VITE_CONTACT_EMAIL` | `contacto@comercializadoralosolivos.cl` (o tu email real) |
+| `VITE_CONTACT_EMAIL` | `paulinacontreras@comercializadoralosolivos.cl` |
 | `VITE_FORM_ENDPOINT` | `https://los-olivos-avisos.onrender.com/api/aviso` |
 | `VITE_CHATBOT_API_URL` | `https://los-olivos-chatbot.onrender.com/api` |
 | `VITE_AVISOS_API_URL` | `https://los-olivos-avisos.onrender.com` |
@@ -126,7 +126,7 @@ Después de que Render asigne las URLs finales:
 
 ### Antes del primer build de producción:
 - [x] **Tabla `avisos`** creada en Supabase (ejecutar `docs/supabase-avisos.sql`)
-- [x] **`VITE_CONTACT_EMAIL`**: cambiado a `contacto@comercializadoralosolivos.cl`
+- [x] **`VITE_CONTACT_EMAIL`**: cambiado a `paulinacontreras@comercializadoralosolivos.cl`
 - [ ] **`VITE_SOCIAL_TIKTOK`**: está vacío, agregar si tienes cuenta
 - [ ] **`VITE_SOCIAL_FACEBOOK`**: está vacío, agregar si tienes cuenta
 - [ ] **`VITE_SOCIAL_LINKS_*`**: todos vacíos, agregar si tienes
@@ -141,15 +141,21 @@ Después de que Render asigne las URLs finales:
 - [x] **Archivos subidos** a `public_html` ✅
 - [x] **Dominio agregado** en panel de administrable.cl ✅
 - [x] **Nameservers cambiados** en nic.cl → `ns1.001webhospedaje.com` / `ns2.001webhospedaje.com` ✅
-- [ ] **Propagación del dominio** (esperar 2-24 hrs) ⏳
-- [ ] **Probar que el sitio carga** en `https://comercializadoralosolivos.cl`
-- [ ] **Probar el catálogo** en `/productos.html` (deben cargar los productos con imágenes desde Supabase)
-- [ ] **Probar el chatbot** (botón flotante abajo a la derecha)
-- [ ] **Probar el formulario de aviso** (botón "Envianos tu aviso" en navbar)
-- [ ] **Probar la página de avisos** en `/avisos.html`
-- [ ] **Verificar que las imágenes carguen** (desde Supabase Storage)
-- [ ] **Verificar el menú móvil** (redimensionar pantalla y probar hamburguesa)
-- [ ] **Probar en móvil real**
+- [x] **Propagación del dominio** ✅
+- [x] **Probar que el sitio carga** en `https://comercializadoralosolivos.cl` ✅
+- [x] **Probar el catálogo** en `/productos.html` (deben cargar los productos con imágenes desde Supabase) ✅
+- [x] **Probar el chatbot** (botón flotante abajo a la derecha) ✅
+- [x] **Probar el formulario de aviso** (botón "Envianos tu aviso" en navbar) ✅
+- [x] **Probar la página de avisos** en `/avisos.html` ✅
+- [x] **Verificar que las imágenes carguen** (desde Supabase Storage) ✅
+- [x] **Verificar el menú móvil** (redimensionar pantalla y probar hamburguesa) ✅
+- [x] **Probar en móvil real** ✅
+- [x] **SSL Let's Encrypt** emitido y funcionando ✅
+- [x] **CORS configurado** en ambos backends para `https://comercializadoralosolivos.cl` ✅
+- [x] **Logo responsive en avisos** (corregido para móvil) ✅
+- [x] **Keep-alive entre backends** (ping mutuo cada 5 min) ✅
+- [x] **Chatbot con catálogo desde Supabase** (fallback cuando no hay productos.json) ✅
+- [x] **Avisos con reintentos** (3 intentos, timeout 60s) ✅
 
 ### SEO (después de que el sitio esté online):
 - [ ] **Google Search Console**: agregar propiedad `comercializadoralosolivos.cl`
@@ -161,7 +167,10 @@ Después de que Render asigne las URLs finales:
 ## 6. Notas técnicas
 
 - **Render free tier**: 750 horas/mes. Los servicios se "duermen" tras 15 min de inactividad. Al recibir una petición, despiertan en ~30 segundos. Esto es normal en el plan gratis.
-- **Spin-down**: la primera petición después de inactividad tarda ~30s. Las siguientes son rápidas.
+- **Keep-alive**: ambos backends se pinguean mutuamente cada 5 minutos (`startKeepAlive()`) para evitar el spin-down. Implementado en `backend/src/server.js` y `server/server.js`.
+- **Chatbot catálogo**: `loadCatalog()` en `backend/src/services/product.service.js` hace fallback a Supabase si no encuentra `productos.json` (filesystem efímero de Render).
+- **Avisos frontend**: `src/avisos-main.ts` hace 3 reintentos con timeout de 60s por intento, para funcionar en móvil incluso si Render está despertando.
+- **Spin-down**: con keep-alive activo, ya no debería ocurrir.
 - **Supabase**: base de datos y storage de imágenes. Ya configurado, no requiere cambios.
 - **Dominio en metas**: configurado como `comercializadoralosolivos.cl` en canonical, og:url, sitemap, robots.txt y JSON-LD.
 - **Build**: ejecutar `npx vite build` después de cambiar `.env`.
@@ -172,16 +181,12 @@ Después de que Render asigne las URLs finales:
 
 ---
 
-## 8. Pendientes para mañana
+## 8. Pendientes
 
-1. **Verificar propagación del dominio**: abrir `https://comercializadoralosolivos.cl` — si no carga, esperar más
-2. **Actualizar CORS en Render** cuando el dominio funcione:
-   - Chatbot → Environment → `CORS_ALLOWED_ORIGINS` = `https://comercializadoralosolivos.cl`
-   - Avisos → Environment → `CLIENT_ORIGIN` = `https://comercializadoralosolivos.cl`
-3. **Verificar SSL**: el panel emite certificado Let's Encrypt automáticamente
-4. **Probar funcionalidades**: chatbot, formulario de avisos, catálogo de productos
-5. **Verificar dominio en Resend**: para enviar emails desde `contacto@comercializadoralosolivos.cl`
-6. **Limpiar archivos temporales**: borrar `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`
+1. **Verificar dominio en Resend**: para enviar emails desde `paulinacontreras@comercializadoralosolivos.cl` en lugar de `onboarding@resend.dev`
+2. **Google Search Console**: agregar propiedad `comercializadoralosolivos.cl` y enviar sitemap
+3. **Google My Business**: reclamar/crear ficha del negocio para Google Maps
+4. **Limpiar archivos temporales**: borrar `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`, `dist-update.zip`
 
 ---
 

@@ -114,7 +114,7 @@ const cards: CardItem[] = [
     imageAlt: 'Oferta LosOlivos',
     category: '',
     title: 'Oferta Los Olivos ',
-    description:'Bombillín Vivo sabores  Manzana, Durazno, Piña, Naranja tri pack $1.0000',
+    description:'Bombillín Vivo sabores  Manzana, Durazno, Piña, Naranja tri pack $1.000',
     ctaLabel: 'Ver más',
     icon: '',
   },

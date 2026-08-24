@@ -67,5 +67,7 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: DATABASE_URL
+      - key: REACTIONS_SUPABASE_URL
+        sync: false
+      - key: REACTIONS_SUPABASE_SERVICE_ROLE_KEY
         sync: false

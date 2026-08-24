@@ -8,7 +8,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
-import pg from 'pg';
 
 dotenv.config();
 
@@ -27,15 +26,11 @@ const supabase = SUPABASE_URL && SUPABASE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_KEY)
   : null;
 
-const DATABASE_URL = process.env.DATABASE_URL || '';
-const pgPool = DATABASE_URL
-  ? new pg.Pool({
-      connectionString: DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    })
+const REACTIONS_SUPABASE_URL = process.env.REACTIONS_SUPABASE_URL || '';
+const REACTIONS_SUPABASE_KEY = process.env.REACTIONS_SUPABASE_SERVICE_ROLE_KEY || '';
+
+const reactionsDb = REACTIONS_SUPABASE_URL && REACTIONS_SUPABASE_KEY
+  ? createClient(REACTIONS_SUPABASE_URL, REACTIONS_SUPABASE_KEY)
   : null;
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -52,17 +47,6 @@ app.get('/health', (_req, res) => {
 
 app.get('/api/avisos', async (_req, res) => {
   try {
-    if (pgPool) {
-      const { rows } = await pgPool.query(
-        `SELECT id, name, phone, email, comment, created_at, expires_at,
-                COALESCE(likes, 0) AS likes, COALESCE(loves, 0) AS loves
-         FROM public.avisos
-         WHERE expires_at IS NULL OR expires_at > NOW()
-         ORDER BY created_at DESC`
-      );
-      return res.json(rows);
-    }
-
     if (!supabase) {
       return res.json([]);
     }
@@ -79,7 +63,31 @@ app.get('/api/avisos', async (_req, res) => {
       return res.json([]);
     }
 
-    return res.json(data || []);
+    const avisos = data || [];
+
+    if (reactionsDb) {
+      const { data: reactions } = await reactionsDb
+        .from('aviso_reactions')
+        .select('aviso_id, likes, loves');
+
+      const reactionsMap = {};
+      for (const r of (reactions || [])) {
+        reactionsMap[r.aviso_id] = { likes: r.likes || 0, loves: r.loves || 0 };
+      }
+
+      for (const aviso of avisos) {
+        const r = reactionsMap[aviso.id] || { likes: 0, loves: 0 };
+        aviso.likes = r.likes;
+        aviso.loves = r.loves;
+      }
+    } else {
+      for (const aviso of avisos) {
+        aviso.likes = aviso.likes || 0;
+        aviso.loves = aviso.loves || 0;
+      }
+    }
+
+    return res.json(avisos);
   } catch (err) {
     console.error('[avisos] Error inesperado GET:', err);
     return res.json([]);
@@ -157,41 +165,69 @@ app.post('/api/avisos/:id/react', async (req, res) => {
       return res.status(400).json({ error: 'Parámetros inválidos' });
     }
 
-    if (pgPool) {
-      const column = type === 'like' ? 'likes' : 'loves';
-      const delta = action === 'add' ? 1 : -1;
+    if (!reactionsDb) {
+      return res.status(503).json({ error: 'Base de datos de reacciones no configurada' });
+    }
 
-      const { rows } = await pgPool.query(
-        `UPDATE public.avisos
-         SET ${column} = GREATEST(COALESCE(${column}, 0) + $1, 0)
-         WHERE id = $2
-         RETURNING id, COALESCE(likes, 0) AS likes, COALESCE(loves, 0) AS loves`,
-        [delta, avisoId]
-      );
+    const column = type === 'like' ? 'likes' : 'loves';
+    const delta = action === 'add' ? 1 : -1;
 
-      if (rows.length === 0) {
-        return res.status(404).json({ error: 'Aviso no encontrado' });
+    const { data: existing } = await reactionsDb
+      .from('aviso_reactions')
+      .select('aviso_id, likes, loves')
+      .eq('aviso_id', avisoId)
+      .maybeSingle();
+
+    if (!existing) {
+      const { data: inserted, error: insertError } = await reactionsDb
+        .from('aviso_reactions')
+        .insert({
+          aviso_id: avisoId,
+          likes: type === 'like' ? 1 : 0,
+          loves: type === 'love' ? 1 : 0,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        const newValue = Math.max(delta, 0);
+        const { data: updated, error: updateError } = await reactionsDb
+          .from('aviso_reactions')
+          .update({
+            likes: type === 'like' ? newValue : 0,
+            loves: type === 'love' ? newValue : 0,
+          })
+          .eq('aviso_id', avisoId)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('[avisos] Error update reacción:', updateError.message);
+          return res.status(500).json({ error: updateError.message });
+        }
+
+        return res.json({ id: avisoId, likes: updated.likes || 0, loves: updated.loves || 0 });
       }
 
-      return res.json(rows[0]);
+      return res.json({ id: avisoId, likes: inserted.likes || 0, loves: inserted.loves || 0 });
     }
 
-    if (!supabase) {
-      return res.status(503).json({ error: 'Base de datos no configurada' });
+    const currentValue = existing[column] || 0;
+    const newValue = Math.max(currentValue + delta, 0);
+
+    const { data: updated, error: updateError } = await reactionsDb
+      .from('aviso_reactions')
+      .update({ [column]: newValue })
+      .eq('aviso_id', avisoId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('[avisos] Error update reacción:', updateError.message);
+      return res.status(500).json({ error: updateError.message });
     }
 
-    const { data, error } = await supabase.rpc('toggle_reaction', {
-      aviso_id: avisoId,
-      reaction_type: type,
-      action,
-    });
-
-    if (error) {
-      console.error('[avisos] Error Supabase RPC:', error.message);
-      return res.status(500).json({ error: error.message });
-    }
-
-    return res.json(data?.[0] || { id: avisoId, likes: 0, loves: 0 });
+    return res.json({ id: avisoId, likes: updated.likes || 0, loves: updated.loves || 0 });
   } catch (err) {
     console.error('[avisos] Error inesperado en react:', err);
     return res.status(500).json({ error: 'No se pudo actualizar la reacción' });
@@ -219,7 +255,7 @@ function startKeepAlive() {
 
 app.listen(PORT, () => {
   console.log(`Backend corriendo en http://localhost:${PORT}`);
-  console.log(`Supabase: ${supabase ? 'conectado' : 'no configurado'}`);
-  console.log(`PostgreSQL directo: ${pgPool ? 'conectado' : 'no configurado'}`);
+  console.log(`Supabase (avisos): ${supabase ? 'conectado' : 'no configurado'}`);
+  console.log(`Supabase (reacciones): ${reactionsDb ? 'conectado' : 'no configurado'}`);
   startKeepAlive();
 });

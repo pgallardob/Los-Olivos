@@ -38,7 +38,13 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+}
+
+@supports (scroll-behavior: smooth) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* ============================================================
@@ -49,21 +55,21 @@ body {
   background:
     radial-gradient(
       60rem 40rem at 85% -10%,
-      color-mix(in srgb, var(--nx-olive) 18%, transparent),
+      rgba(111, 139, 63, 0.18),
       transparent 60%
     ),
     radial-gradient(
       50rem 35rem at -15% 45%,
-      color-mix(in srgb, var(--nx-neon) 8%, transparent),
+      rgba(212, 255, 94, 0.08),
       transparent 60%
     ),
     linear-gradient(
-      color-mix(in srgb, var(--nx-metal) 5%, transparent) 1px,
+      rgba(167, 177, 172, 0.05) 1px,
       transparent 1px
     ),
     linear-gradient(
       90deg,
-      color-mix(in srgb, var(--nx-metal) 5%, transparent) 1px,
+      rgba(167, 177, 172, 0.05) 1px,
       transparent 1px
     ),
     var(--nx-graphite);
@@ -86,10 +92,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: color-mix(in srgb, var(--nx-graphite) 82%, transparent);
+  background: rgba(11, 14, 12, 0.82);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--nx-metal) 20%, transparent);
+  border-bottom: 1px solid rgba(167, 177, 172, 0.2);
 }
 
 .navbar {
@@ -138,9 +144,7 @@ body {
 .navbar-links a:hover,
 .navbar-links a:focus-visible {
   color: var(--nx-neon);
-  text-shadow:
-    0 0 12px
-    color-mix(in srgb, var(--nx-neon) 60%, transparent);
+  text-shadow: 0 0 12px rgba(212, 255, 94, 0.6);
 }
 
 .navbar-cta {
@@ -165,8 +169,7 @@ sl-button.navbar-cta::part(base) {
 
 .navbar-mobile-menu {
   display: block;
-  border-top: 1px solid
-    color-mix(in srgb, var(--nx-metal) 15%, transparent);
+  border-top: 1px solid rgba(167, 177, 172, 0.15);
   background: var(--nx-graphite-soft);
   padding: 0.5rem 1rem;
 }
@@ -191,8 +194,7 @@ sl-button.navbar-cta::part(base) {
   text-decoration: none;
   font-size: 0.9rem;
   letter-spacing: 0.04em;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--nx-metal) 10%, transparent);
+  border-bottom: 1px solid rgba(167, 177, 172, 0.1);
   transition: color 0.2s ease, background 0.2s ease;
 }
 
@@ -203,7 +205,7 @@ sl-button.navbar-cta::part(base) {
 .navbar-mobile-menu a:hover,
 .navbar-mobile-menu a:focus-visible {
   color: var(--nx-neon);
-  background: color-mix(in srgb, var(--nx-olive) 8%, transparent);
+  background: rgba(111, 139, 63, 0.08);
 }
 
 @media (min-width: 992px) {
@@ -244,8 +246,7 @@ sl-button.navbar-cta::part(base) {
   margin: 0;
   padding: 0.5rem 0;
   background: var(--nx-graphite-soft);
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 20%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.2);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   z-index: 200;
@@ -265,7 +266,7 @@ sl-button.navbar-cta::part(base) {
 
 .navbar-dropdown-menu li a:hover,
 .navbar-dropdown-menu li a:focus-visible {
-  background: color-mix(in srgb, var(--nx-olive) 15%, transparent);
+  background: rgba(111, 139, 63, 0.15);
   color: var(--nx-olive-light);
   text-shadow: none;
 }
@@ -286,8 +287,7 @@ sl-button.navbar-cta::part(base) {
 
 /* Popup: más ancho que alto, centrado, sin salirse de pantalla */
 .quote-modal {
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 20%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.2);
   padding: 1rem 1.25rem;
   max-height: 80vh;
   overflow-y: auto;
@@ -345,8 +345,7 @@ sl-button.navbar-cta::part(base) {
 .quote-form input {
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 30%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.3);
   background: var(--nx-graphite);
   color: var(--nx-metal-light);
   font-size: 0.8rem;
@@ -360,8 +359,7 @@ sl-button.navbar-cta::part(base) {
 .quote-form textarea {
   padding: 0.4rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 30%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.3);
   background: var(--nx-graphite);
   color: var(--nx-metal-light);
   font-size: 0.85rem;
@@ -376,9 +374,7 @@ sl-button.navbar-cta::part(base) {
 .quote-form input:focus,
 .quote-form textarea:focus {
   border-color: var(--nx-olive-light);
-  box-shadow:
-    0 0 0 1px
-    color-mix(in srgb, var(--nx-olive) 25%, transparent);
+  box-shadow: 0 0 0 1px rgba(111, 139, 63, 0.25);
 }
 
 .quote-form-actions {
@@ -414,8 +410,7 @@ sl-button.navbar-cta::part(base) {
 .quote-form-cancel {
   background: transparent;
   color: var(--nx-metal-light);
-  border-color:
-    color-mix(in srgb, var(--nx-metal) 40%, transparent);
+  border-color: rgba(167, 177, 172, 0.4);
 }
 
 .quote-form-cancel:hover {
@@ -432,8 +427,7 @@ sl-button.navbar-cta::part(base) {
   gap: 0.4rem;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 30%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.3);
   background: transparent;
   color: var(--nx-metal-light);
   font-size: 0.85rem;
@@ -492,6 +486,47 @@ sl-button.navbar-cta::part(base) {
 }
 
 /* --- Responsive navbar de avisos en móvil --- */
+
+/* Fallback para navegadores sin :has() */
+.navbar.avisos-navbar {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  min-height: auto;
+}
+
+.navbar.avisos-navbar .navbar-brand {
+  flex: 0 0 auto;
+  order: 1;
+}
+
+.navbar.avisos-navbar .navbar-brand img {
+  height: 3rem;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.navbar.avisos-navbar .avisos-title {
+  order: 3;
+  flex: 1 1 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+
+.navbar.avisos-navbar .navbar-actions {
+  order: 2;
+  margin-left: auto;
+  gap: 0.35rem;
+}
+
+.navbar.avisos-navbar .avisos-back-btn,
+.navbar.avisos-navbar .avisos-publish-btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+}
+
 @media (max-width: 600px) {
   .navbar:has(.avisos-title) {
     flex-wrap: wrap;
@@ -541,8 +576,7 @@ sl-button.navbar-cta::part(base) {
 
 .aviso-card {
   background: var(--nx-graphite-soft);
-  border: 1px solid
-    color-mix(in srgb, var(--nx-olive-light) 20%, transparent);
+  border: 1px solid rgba(169, 194, 90, 0.2);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   transition:
@@ -552,9 +586,7 @@ sl-button.navbar-cta::part(base) {
 
 .aviso-card:hover {
   border-color: var(--nx-olive-light);
-  box-shadow:
-    0 4px 16px
-    color-mix(in srgb, var(--nx-neon) 8%, transparent);
+  box-shadow: 0 4px 16px rgba(212, 255, 94, 0.08);
 }
 
 .aviso-card-header {
@@ -632,13 +664,25 @@ sl-button.navbar-cta::part(base) {
 .hero {
   height: auto;
   min-height: 340px;
-  max-height: 70dvh;
+  max-height: 70vh;
+}
+
+@supports (max-height: 70dvh) {
+  .hero {
+    max-height: 70dvh;
+  }
 }
 
 .hero-swiper {
   height: auto;
   min-height: 340px;
-  max-height: 70dvh;
+  max-height: 70vh;
+}
+
+@supports (max-height: 70dvh) {
+  .hero-swiper {
+    max-height: 70dvh;
+  }
 }
 
 .hero-slide {
@@ -646,14 +690,20 @@ sl-button.navbar-cta::part(base) {
   display: grid;
   align-content: center;
   min-height: 340px;
-  max-height: 70dvh;
+  max-height: 70vh;
   padding: 1.5rem;
   overflow: hidden;
 }
 
+@supports (max-height: 70dvh) {
+  .hero-slide {
+    max-height: 70dvh;
+  }
+}
+
 .hero-slide-image {
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -662,12 +712,12 @@ sl-button.navbar-cta::part(base) {
 .hero-slide::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   z-index: 1;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--nx-graphite) 88%, transparent) 0%,
-    color-mix(in srgb, var(--nx-graphite) 45%, transparent) 60%,
+    rgba(11, 14, 12, 0.88) 0%,
+    rgba(11, 14, 12, 0.45) 60%,
     transparent 100%
   );
 }
@@ -700,9 +750,7 @@ sl-button.navbar-cta::part(base) {
   letter-spacing: 0.25em;
   font-size: 0.8rem;
   margin-bottom: 0.75rem;
-  text-shadow:
-    0 0 14px
-    color-mix(in srgb, var(--nx-neon) 50%, transparent);
+  text-shadow: 0 0 14px rgba(212, 255, 94, 0.5);
 }
 
 .hero-kicker::before {
@@ -766,9 +814,7 @@ sl-button.navbar-cta::part(base) {
     var(--nx-neon)
   );
   opacity: 1;
-  box-shadow:
-    0 0 16px
-    color-mix(in srgb, var(--nx-neon) 80%, transparent);
+  box-shadow: 0 0 16px rgba(212, 255, 94, 0.8);
 }
 
 /* ============================================================
@@ -797,9 +843,7 @@ sl-button.navbar-cta::part(base) {
   letter-spacing: 0.25em;
   font-size: 0.8rem;
   margin-bottom: 0.5rem;
-  text-shadow:
-    0 0 14px
-    color-mix(in srgb, var(--nx-neon) 50%, transparent);
+  text-shadow: 0 0 14px rgba(212, 255, 94, 0.5);
 }
 
 .section-kicker::before,
@@ -872,11 +916,10 @@ sl-button.navbar-cta::part(base) {
   overflow: hidden;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--nx-olive) 10%, var(--nx-graphite-soft)),
+    rgba(111, 139, 63, 0.1),
     var(--nx-graphite-soft) 55%
   );
-  border: 1px solid
-    color-mix(in srgb, var(--nx-olive-light) 25%, transparent);
+  border: 1px solid rgba(169, 194, 90, 0.25);
   border-radius: 12px;
   transition:
     transform 0.2s ease,
@@ -905,10 +948,8 @@ sl-button.navbar-cta::part(base) {
   transform: translateY(-4px);
   border-color: var(--nx-olive-light);
   box-shadow:
-    0 12px 40px
-    color-mix(in srgb, var(--nx-neon) 18%, transparent),
-    inset 0 1px 0
-    color-mix(in srgb, var(--nx-neon) 25%, transparent);
+    0 12px 40px rgba(212, 255, 94, 0.18),
+    inset 0 1px 0 rgba(212, 255, 94, 0.25);
 }
 
 .card:hover::after {
@@ -922,6 +963,13 @@ sl-button.navbar-cta::part(base) {
   object-fit: contain;
   background-color: var(--nx-graphite-soft);
   display: block;
+}
+
+@supports not (aspect-ratio: 4 / 3) {
+  .card-image {
+    height: 0;
+    padding-bottom: 75%;
+  }
 }
 
 .card-body {
@@ -942,11 +990,7 @@ sl-button.navbar-cta::part(base) {
 .card-icon {
   color: var(--nx-neon);
   display: inline-flex;
-  filter:
-    drop-shadow(
-      0 0 6px
-      color-mix(in srgb, var(--nx-neon) 60%, transparent)
-    );
+  filter: drop-shadow(0 0 6px rgba(212, 255, 94, 0.6));
 }
 
 .card-title {
@@ -987,12 +1031,11 @@ sl-button.navbar-cta::part(base) {
 
 .about-stats li {
   padding: 1.5rem;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-olive-light) 25%, transparent);
+  border: 1px solid rgba(169, 194, 90, 0.25);
   border-radius: 12px;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--nx-olive) 8%, var(--nx-graphite-soft)),
+    rgba(111, 139, 63, 0.08),
     var(--nx-graphite-soft)
   );
   transition:
@@ -1002,18 +1045,14 @@ sl-button.navbar-cta::part(base) {
 
 .about-stats li:hover {
   border-color: var(--nx-olive-light);
-  box-shadow:
-    0 0 24px
-    color-mix(in srgb, var(--nx-neon) 15%, transparent);
+  box-shadow: 0 0 24px rgba(212, 255, 94, 0.15);
 }
 
 .about-stats strong {
   display: block;
   font-size: 2.2rem;
   color: var(--nx-neon);
-  text-shadow:
-    0 0 18px
-    color-mix(in srgb, var(--nx-neon) 55%, transparent);
+  text-shadow: 0 0 18px rgba(212, 255, 94, 0.55);
 }
 
 .about-stats span {
@@ -1026,8 +1065,7 @@ sl-button.navbar-cta::part(base) {
    ============================================================ */
 
 .site-footer {
-  border-top: 1px solid
-    color-mix(in srgb, var(--nx-metal) 20%, transparent);
+  border-top: 1px solid rgba(167, 177, 172, 0.2);
   background: var(--nx-graphite-soft);
   padding: 0.75rem 1rem 0.5rem;
 }
@@ -1318,8 +1356,7 @@ sl-button.navbar-cta::part(base) {
   max-width: 72rem;
   margin: 0.5rem auto 0;
   padding-top: 0.5rem;
-  border-top: 1px solid
-    color-mix(in srgb, var(--nx-metal) 15%, transparent);
+  border-top: 1px solid rgba(167, 177, 172, 0.15);
   text-align: center;
 }
 
@@ -1342,8 +1379,7 @@ sl-button[variant="primary"]::part(base) {
   border: 1px solid var(--nx-olive-light);
   border-radius: 10px;
   box-shadow:
-    0 0 18px
-    color-mix(in srgb, var(--nx-neon) 20%, transparent),
+    0 0 18px rgba(212, 255, 94, 0.2),
     0 4px 12px rgba(0, 0, 0, 0.4);
   transition:
     box-shadow 0.2s ease,
@@ -1353,15 +1389,13 @@ sl-button[variant="primary"]::part(base) {
 sl-button[variant="primary"]::part(base):hover {
   filter: brightness(1.15);
   box-shadow:
-    0 0 28px
-    color-mix(in srgb, var(--nx-neon) 45%, transparent),
+    0 0 28px rgba(212, 255, 94, 0.45),
     0 6px 16px rgba(0, 0, 0, 0.5);
 }
 
 sl-button[variant="default"]::part(base) {
   background: transparent;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-olive-light) 50%, transparent);
+  border: 1px solid rgba(169, 194, 90, 0.5);
   border-radius: 10px;
   color: var(--nx-olive-light);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -1375,8 +1409,7 @@ sl-button[variant="default"]::part(base):hover {
   border-color: var(--nx-neon);
   color: var(--nx-neon);
   box-shadow:
-    0 0 14px
-    color-mix(in srgb, var(--nx-neon) 30%, transparent),
+    0 0 14px rgba(212, 255, 94, 0.3),
     0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -1447,8 +1480,7 @@ sl-button[variant="default"]::part(base):hover {
 .catalog-filter-btn {
   padding: 0.4rem 0.9rem;
   border-radius: 8px;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 30%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.3);
   background: transparent;
   color: var(--nx-metal-light);
   font-size: 0.85rem;
@@ -1469,10 +1501,8 @@ sl-button[variant="default"]::part(base):hover {
 .catalog-filter-btn--active {
   border-color: var(--nx-neon);
   color: var(--nx-neon);
-  background: color-mix(in srgb, var(--nx-neon) 10%, transparent);
-  box-shadow:
-    0 0 12px
-    color-mix(in srgb, var(--nx-neon) 25%, transparent);
+  background: rgba(212, 255, 94, 0.1);
+  box-shadow: 0 0 12px rgba(212, 255, 94, 0.25);
 }
 
 /* --- Grid de productos --- */
@@ -1509,11 +1539,10 @@ sl-button[variant="default"]::part(base):hover {
   flex-direction: column;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--nx-olive) 8%, var(--nx-graphite-soft)),
+    rgba(111, 139, 63, 0.08),
     var(--nx-graphite-soft) 60%
   );
-  border: 1px solid
-    color-mix(in srgb, var(--nx-olive-light) 20%, transparent);
+  border: 1px solid rgba(169, 194, 90, 0.2);
   border-radius: 12px;
   overflow: hidden;
   transition:
@@ -1526,10 +1555,8 @@ sl-button[variant="default"]::part(base):hover {
   transform: translateY(-4px);
   border-color: var(--nx-olive-light);
   box-shadow:
-    0 8px 28px
-    color-mix(in srgb, var(--nx-neon) 15%, transparent),
-    inset 0 1px 0
-    color-mix(in srgb, var(--nx-neon) 20%, transparent);
+    0 8px 28px rgba(212, 255, 94, 0.15),
+    inset 0 1px 0 rgba(212, 255, 94, 0.2);
 }
 
 /* --- Imagen del producto --- */
@@ -1540,9 +1567,8 @@ sl-button[variant="default"]::part(base):hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--nx-graphite) 60%, transparent);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--nx-metal) 15%, transparent);
+  background: rgba(11, 14, 12, 0.6);
+  border-bottom: 1px solid rgba(167, 177, 172, 0.15);
   overflow: hidden;
 }
 
@@ -1624,8 +1650,7 @@ sl-button[variant="default"]::part(base):hover {
   height: 2.2rem;
   padding: 0 0.5rem;
   border-radius: 8px;
-  border: 1px solid
-    color-mix(in srgb, var(--nx-metal) 25%, transparent);
+  border: 1px solid rgba(167, 177, 172, 0.25);
   background: transparent;
   color: var(--nx-metal-light);
   font-size: 0.85rem;
@@ -1645,10 +1670,8 @@ sl-button[variant="default"]::part(base):hover {
 .catalog-page-btn--active {
   border-color: var(--nx-neon);
   color: var(--nx-neon);
-  background: color-mix(in srgb, var(--nx-neon) 12%, transparent);
-  box-shadow:
-    0 0 10px
-    color-mix(in srgb, var(--nx-neon) 25%, transparent);
+  background: rgba(212, 255, 94, 0.12);
+  box-shadow: 0 0 10px rgba(212, 255, 94, 0.25);
 }
 
 .catalog-page-btn:disabled {

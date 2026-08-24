@@ -120,6 +120,42 @@ app.post('/api/aviso', async (req, res) => {
   }
 });
 
+// ─── Reacciones (me gusta / me encanta) por aviso ───
+app.post('/api/avisos/:id/react', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(503).json({ error: 'Supabase no configurado' });
+    }
+
+    const avisoId = parseInt(req.params.id, 10);
+    const { type, action } = req.body;
+
+    if (
+      Number.isNaN(avisoId) ||
+      !['like', 'love'].includes(type) ||
+      !['add', 'remove'].includes(action)
+    ) {
+      return res.status(400).json({ error: 'Parámetros inválidos' });
+    }
+
+    const { data, error } = await supabase.rpc('toggle_reaction', {
+      aviso_id: avisoId,
+      reaction_type: type,
+      action,
+    });
+
+    if (error) {
+      console.error('[avisos] Error Supabase RPC:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json(data?.[0] || { id: avisoId, likes: 0, loves: 0 });
+  } catch (err) {
+    console.error('[avisos] Error inesperado en react:', err);
+    return res.status(500).json({ error: 'No se pudo actualizar la reacción' });
+  }
+});
+
 // ─── Keep-alive: ping mutuo cada 5 minutos para evitar sleep en Render ───
 const KEEP_ALIVE_URL = process.env.KEEP_ALIVE_URL || 'https://los-olivos-chatbot.onrender.com/api/health';
 const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutos

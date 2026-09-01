@@ -9,6 +9,9 @@ import dotenv from 'dotenv';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import multer from 'multer';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 dotenv.config();
 
@@ -19,6 +22,9 @@ const allowedOrigins = CLIENT_ORIGIN.split(',').map((s) => s.trim()).filter(Bool
 const MAIL_TO = process.env.MAIL_TO || 'pgallardob@hotmail.com';
 const MAIL_FROM = process.env.MAIL_FROM || 'Los Olivos <onboarding@resend.dev>';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const FB_GROUP_URL = process.env.FB_GROUP_URL || 'https://www.facebook.com/share/g/1BUHA259rB/';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
@@ -43,6 +49,22 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_IMAGE_BYTES, files: 1, parts: 20, fields: 10 },
 });
+
+// ─── Autenticación del panel (contraseña única en el servidor) ───
+function isAdminPasswordValid(candidate) {
+  if (!ADMIN_PASSWORD) return false;
+  const a = crypto.createHash('sha256').update(String(candidate)).digest();
+  const b = crypto.createHash('sha256').update(ADMIN_PASSWORD).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
+function requireAdmin(req, res, next) {
+  const candidate = req.headers['x-admin-password'] || '';
+  if (!isAdminPasswordValid(candidate)) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+  next();
+}
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -329,6 +351,153 @@ app.post('/api/avisos/:id/react', async (req, res) => {
   } catch (err) {
     console.error('[avisos] Error inesperado en react:', err);
     return res.status(500).json({ error: 'No se pudo actualizar la reacción' });
+  }
+});
+
+// ─── Panel de administración (privado, protegido por contraseña) ───
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body || {};
+  if (!isAdminPasswordValid(password || '')) {
+    return res.status(401).json({ error: 'Contraseña incorrecta' });
+  }
+  return res.json({ ok: true });
+});
+
+app.get('/api/admin/config', requireAdmin, (_req, res) => {
+  res.json({ fb_group_url: FB_GROUP_URL });
+});
+
+app.get('/api/admin/avisos', requireAdmin, async (_req, res) => {
+  try {
+    if (!supabase || !reactionsDb) {
+      return res.status(500).json({ error: 'Supabase no configurado' });
+    }
+
+    const [avisosRes, imagesRes, fbRes] = await Promise.all([
+      supabase.from('avisos').select('*').order('created_at', { ascending: false }),
+      reactionsDb.from('aviso_images').select('aviso_id, storage_path, mime_type'),
+      reactionsDb.from('aviso_facebook').select('*').order('fecha_preparacion', { ascending: false }),
+    ]);
+
+    if (avisosRes.error) {
+      console.error('[admin] Error avisos:', avisosRes.error.message);
+      return res.status(500).json({ error: 'No se pudieron obtener los avisos' });
+    }
+
+    const imagesMap = {};
+    for (const img of (imagesRes.data || [])) {
+      imagesMap[img.aviso_id] = img;
+    }
+
+    const fbMap = {};
+    for (const fb of (fbRes.data || [])) {
+      fbMap[fb.aviso_id] = fb;
+    }
+
+    const avisos = (avisosRes.data || []).map((aviso) => {
+      const img = imagesMap[aviso.id];
+      const fb = fbMap[aviso.id] || null;
+      return {
+        id: aviso.id,
+        name: aviso.name,
+        phone: aviso.phone,
+        email: aviso.email,
+        comment: aviso.comment,
+        created_at: aviso.created_at,
+        expires_at: aviso.expires_at,
+        image_url: img
+          ? `${REACTIONS_SUPABASE_URL}/storage/v1/object/public/aviso-images/${img.storage_path}`
+          : null,
+        facebook: fb ? {
+          estado: fb.estado,
+          texto: fb.texto_facebook,
+          imagen_path: fb.imagen_path,
+          fecha_preparacion: fb.fecha_preparacion,
+          fecha_publicacion: fb.fecha_publicacion,
+          observaciones: fb.observaciones,
+        } : null,
+      };
+    });
+
+    return res.json({ avisos });
+  } catch (err) {
+    console.error('[admin] Error inesperado:', err);
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.get('/api/admin/avisos/:id/image', requireAdmin, async (req, res) => {
+  try {
+    const avisoId = parseInt(req.params.id, 10);
+    if (Number.isNaN(avisoId)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    const { data: img, error } = await reactionsDb
+      .from('aviso_images')
+      .select('storage_path, mime_type')
+      .eq('aviso_id', avisoId)
+      .maybeSingle();
+
+    if (error || !img) {
+      return res.status(404).json({ error: 'El aviso no tiene imagen' });
+    }
+
+    const { data: blob, error: dlError } = await reactionsDb.storage
+      .from('aviso-images')
+      .download(img.storage_path);
+
+    if (dlError || !blob) {
+      console.error('[admin] Error descarga imagen:', dlError?.message);
+      return res.status(500).json({ error: 'No se pudo obtener la imagen' });
+    }
+
+    const buffer = Buffer.from(await blob.arrayBuffer());
+    res.set('Content-Type', img.mime_type || 'application/octet-stream');
+    res.set('Cache-Control', 'private, max-age=300');
+    return res.send(buffer);
+  } catch (err) {
+    console.error('[admin] Error imagen:', err);
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.patch('/api/admin/avisos/:id/facebook', requireAdmin, async (req, res) => {
+  try {
+    const avisoId = parseInt(req.params.id, 10);
+    const { estado, observaciones } = req.body || {};
+
+    if (Number.isNaN(avisoId) || !['pendiente', 'publicado', 'rechazado'].includes(estado)) {
+      return res.status(400).json({ error: 'Parámetros inválidos' });
+    }
+
+    const nowIso = new Date().toISOString();
+    const updates = { estado, updated_at: nowIso };
+    if (typeof observaciones === 'string') {
+      updates.observaciones = observaciones.trim() || null;
+    }
+    updates.fecha_publicacion = estado === 'publicado' ? nowIso : null;
+
+    const { data, error } = await reactionsDb
+      .from('aviso_facebook')
+      .update(updates)
+      .eq('aviso_id', avisoId)
+      .select('aviso_id, estado, fecha_publicacion')
+      .single();
+
+    if (error) {
+      console.error('[admin] Error update facebook:', error.message);
+      return res.status(500).json({ error: 'No se pudo actualizar el aviso' });
+    }
+
+    return res.json({ ok: true, aviso_id: data.aviso_id, estado: data.estado });
+  } catch (err) {
+    console.error('[admin] Error update:', err);
+    return res.status(500).json({ error: 'Error interno' });
   }
 });
 

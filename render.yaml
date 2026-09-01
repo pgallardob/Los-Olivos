@@ -74,4 +74,4 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: FB_GROUP_URL
-        value: "https://www.facebook.com/share/g/1BUHA259rB/"
+        value: "https://www.facebook.com/share/g/1HLN9w3p3s/"

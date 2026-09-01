@@ -23,7 +23,7 @@ const MAIL_TO = process.env.MAIL_TO || 'pgallardob@hotmail.com';
 const MAIL_FROM = process.env.MAIL_FROM || 'Los Olivos <onboarding@resend.dev>';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const FB_GROUP_URL = process.env.FB_GROUP_URL || 'https://www.facebook.com/share/g/1BUHA259rB/';
+const FB_GROUP_URL = process.env.FB_GROUP_URL || 'https://www.facebook.com/share/g/1HLN9w3p3s/';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';

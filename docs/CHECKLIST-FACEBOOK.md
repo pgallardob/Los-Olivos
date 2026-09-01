@@ -9,8 +9,18 @@ Guía de operación y estado del sistema (septiembre 2026).
 - [x] Fase 3 — Texto para Facebook generado automáticamente y registrado como `pendiente` al publicar cada aviso
 - [x] Fase 4 — Panel de administración privado en `/admin` (desplegado y verificado en Render)
 - [x] Fase 5 — Frontend: input de imagen en el modal de aviso y render de imágenes en las cards
-- [ ] Fase 6 — **PENDIENTE**: subir la carpeta `dist/` al hosting (credenciales FTP rechazadas, subida manual desde el panel de 001webhospedaje)
+- [ ] Fase 6 — **PENDIENTE/BLOQUEADA**: subir la carpeta `dist/` al hosting (ver incidente abajo)
 - [x] Fase 7 — Esta guía
+
+## ⚠️ Incidente de hosting (1-sep-2026) — en resolución
+
+1. El script de deploy FTP intentó subir con las credenciales del email de bienvenida (usuario `yftqrecu`) y el servidor las rechazó (error 530) desde el primer intento — funcionaban en despliegues anteriores.
+2. Los reintentos automáticos del script dispararon el firewall del hosting: la IP `186.189.106.174` quedó bloqueada (puertos 21/80/443/2003). El sitio público sigue funcionando para el resto del mundo (verificado).
+3. Se envió correo a **soporte@administrable.cl** solicitando: desbloquear la IP + verificar/restablecer la contraseña FTP.
+4. `deploy-ftp.ps1` fue reescrito: host por IP (136.243.227.82, según email de bienvenida), **sin reintentos**, prueba única de login antes de subir y detención total ante error 530.
+5. `deploy-check.ps1` (nuevo): verifica en un comando si el baneo sigue activo y si las credenciales FTP ya funcionan — **usarlo antes de cualquier intento de deploy**.
+6. `dist-update.zip` (1,25 MB) quedó listo en la raíz del proyecto como alternativa para subir por File Manager del panel Webuzo.
+7. `ADMIN_PASSWORD` ya está configurada en Render (panel operativo).
 
 ## URL del panel
 

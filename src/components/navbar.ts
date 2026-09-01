@@ -22,6 +22,10 @@ function showQuoteDialog(): void {
         Aviso
         <textarea name="comment" rows="3" required></textarea>
       </label>
+      <label>
+        Imagen (opcional, máx. 5MB)
+        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" />
+      </label>
       <div class="quote-form-actions">
         <button type="submit" class="quote-form-submit">Enviar</button>
         <button type="button" class="quote-form-cancel" id="quote-cancel">Salir</button>
@@ -56,6 +60,21 @@ function showQuoteDialog(): void {
         const phone = String(data.get('phone') ?? '');
         const email = String(data.get('email') ?? '');
         const comment = String(data.get('comment') ?? '');
+        const imageEntry = data.get('image');
+        const imageFile = imageEntry instanceof File && imageEntry.size > 0 ? imageEntry : null;
+
+        if (imageFile && imageFile.size > 5 * 1024 * 1024) {
+          void Swal.fire({
+            title: 'Imagen muy grande',
+            text: 'La imagen supera el máximo de 5MB. Elige una más pequeña o envíala sin imagen.',
+            icon: 'warning',
+            confirmButtonText: 'Entendido',
+            background: '#161b17',
+            color: '#e4eae6',
+            confirmButtonColor: '#6f8b3f',
+          });
+          return;
+        }
 
         if (!endpoint) {
           const fallbackEmail = import.meta.env.VITE_FALLBACK_EMAIL as string || 'pgallardob@hotmail.com';
@@ -76,11 +95,19 @@ function showQuoteDialog(): void {
           return;
         }
 
-        void fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ name, phone, email, comment }),
-        })
+        const sendRequest = imageFile
+          ? fetch(endpoint, {
+              method: 'POST',
+              headers: { Accept: 'application/json' },
+              body: data,
+            })
+          : fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ name, phone, email, comment }),
+            });
+
+        void sendRequest
           .then((response) => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             void Swal.fire({

@@ -27,6 +27,7 @@ interface Aviso {
   expires_at?: string;
   likes?: number;
   loves?: number;
+  image_url?: string | null;
 }
 
 function formatRemaining(ms: number): string {
@@ -213,6 +214,21 @@ async function loadAvisos(): Promise<void> {
         body.className = 'aviso-card-body';
         body.textContent = aviso.comment;
         card.appendChild(body);
+
+        if (aviso.image_url) {
+          const figure = document.createElement('figure');
+          figure.className = 'aviso-card-figure';
+
+          const img = document.createElement('img');
+          img.className = 'aviso-card-image';
+          img.src = aviso.image_url;
+          img.alt = `Imagen del aviso de ${aviso.name}`;
+          img.loading = 'lazy';
+          img.decoding = 'async';
+
+          figure.appendChild(img);
+          card.appendChild(figure);
+        }
 
         const footer = document.createElement('div');
         footer.className = 'aviso-card-footer';

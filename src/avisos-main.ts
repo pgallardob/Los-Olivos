@@ -208,12 +208,8 @@ async function loadAvisos(): Promise<void> {
         email.textContent = aviso.email;
         header.appendChild(email);
 
-        card.appendChild(header);
-
-        const body = document.createElement('p');
-        body.className = 'aviso-card-body';
-        body.textContent = aviso.comment;
-        card.appendChild(body);
+        const content = document.createElement('div');
+        content.className = 'aviso-card-content';
 
         if (aviso.image_url) {
           const figure = document.createElement('figure');
@@ -227,8 +223,20 @@ async function loadAvisos(): Promise<void> {
           img.decoding = 'async';
 
           figure.appendChild(img);
-          card.appendChild(figure);
+          content.appendChild(figure);
         }
+
+        const text = document.createElement('div');
+        text.className = 'aviso-card-text';
+        text.appendChild(header);
+
+        const body = document.createElement('p');
+        body.className = 'aviso-card-body';
+        body.textContent = aviso.comment;
+        text.appendChild(body);
+
+        content.appendChild(text);
+        card.appendChild(content);
 
         const footer = document.createElement('div');
         footer.className = 'aviso-card-footer';

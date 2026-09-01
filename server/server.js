@@ -112,6 +112,24 @@ app.get('/api/avisos', async (_req, res) => {
   }
 });
 
+// ─── Texto automático para publicación en Facebook ───
+function buildFacebookText({ name, phone, comment }) {
+  return [
+    '📢 AVISO VECINAL — Comercializadora Los Olivos',
+    '',
+    String(comment).trim(),
+    '',
+    `👤 Contacto: ${name}`,
+    `📞 Fono: ${phone}`,
+    '',
+    '📍 Te esperamos en Concordia 408, Local A, Peñaflor',
+    '🕐 Lun a Sáb, 10:00–20:00 hrs',
+    '👉 Síguenos: instagram.com/comercializadora_los_olivos_',
+    '',
+    '#Peñaflor #AvisosVecinales #Comunidad #LosOlivos',
+  ].join('\n');
+}
+
 app.post('/api/aviso', upload.single('image'), async (req, res) => {
   try {
     const { name, phone, email, comment } = req.body;
@@ -181,6 +199,8 @@ app.post('/api/aviso', upload.single('image'), async (req, res) => {
 
     const avisoId = inserted?.id ?? null;
 
+    let imagePath = null;
+
     if (image && avisoId && reactionsDb) {
       const ext = image.mimetype === 'image/jpeg' ? 'jpg' : image.mimetype.split('/')[1];
       const storagePath = `${avisoId}/${Date.now()}.${ext}`;
@@ -192,6 +212,8 @@ app.post('/api/aviso', upload.single('image'), async (req, res) => {
       if (upError) {
         console.error('[avisos] Error subida imagen:', upError.message);
       } else {
+        imagePath = storagePath;
+
         const { error: imgError } = await reactionsDb
           .from('aviso_images')
           .insert({ aviso_id: avisoId, storage_path: storagePath, mime_type: image.mimetype });
@@ -199,6 +221,24 @@ app.post('/api/aviso', upload.single('image'), async (req, res) => {
         if (imgError) {
           console.error('[avisos] Error registro imagen:', imgError.message);
         }
+      }
+    }
+
+    // ─── Preparación automática para Facebook (queda pendiente de moderación) ───
+    if (avisoId && reactionsDb) {
+      const textoFacebook = buildFacebookText({ name, phone, comment });
+
+      const { error: fbError } = await reactionsDb
+        .from('aviso_facebook')
+        .insert({
+          aviso_id: avisoId,
+          estado: 'pendiente',
+          texto_facebook: textoFacebook,
+          imagen_path: imagePath,
+        });
+
+      if (fbError) {
+        console.error('[avisos] Error registro Facebook:', fbError.message);
       }
     }
 

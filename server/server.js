@@ -8,6 +8,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -34,6 +35,14 @@ const reactionsDb = REACTIONS_SUPABASE_URL && REACTIONS_SUPABASE_KEY
   : null;
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_IMAGE_BYTES, files: 1, parts: 20, fields: 10 },
+});
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -66,24 +75,33 @@ app.get('/api/avisos', async (_req, res) => {
     const avisos = data || [];
 
     if (reactionsDb) {
-      const { data: reactions } = await reactionsDb
-        .from('aviso_reactions')
-        .select('aviso_id, likes, loves');
+      const [reactionsRes, imagesRes] = await Promise.all([
+        reactionsDb.from('aviso_reactions').select('aviso_id, likes, loves'),
+        reactionsDb.from('aviso_images').select('aviso_id, storage_path'),
+      ]);
 
       const reactionsMap = {};
-      for (const r of (reactions || [])) {
+      for (const r of (reactionsRes.data || [])) {
         reactionsMap[r.aviso_id] = { likes: r.likes || 0, loves: r.loves || 0 };
+      }
+
+      const imagesMap = {};
+      for (const img of (imagesRes.data || [])) {
+        imagesMap[img.aviso_id] =
+          `${REACTIONS_SUPABASE_URL}/storage/v1/object/public/aviso-images/${img.storage_path}`;
       }
 
       for (const aviso of avisos) {
         const r = reactionsMap[aviso.id] || { likes: 0, loves: 0 };
         aviso.likes = r.likes;
         aviso.loves = r.loves;
+        aviso.image_url = imagesMap[aviso.id] || null;
       }
     } else {
       for (const aviso of avisos) {
         aviso.likes = aviso.likes || 0;
         aviso.loves = aviso.loves || 0;
+        aviso.image_url = null;
       }
     }
 
@@ -94,7 +112,7 @@ app.get('/api/avisos', async (_req, res) => {
   }
 });
 
-app.post('/api/aviso', async (req, res) => {
+app.post('/api/aviso', upload.single('image'), async (req, res) => {
   try {
     const { name, phone, email, comment } = req.body;
 
@@ -102,13 +120,24 @@ app.post('/api/aviso', async (req, res) => {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
 
+    const image = req.file || null;
+    if (image) {
+      if (!ALLOWED_IMAGE_TYPES.includes(image.mimetype)) {
+        return res.status(400).json({ error: 'Imagen no permitida: usa JPG, PNG, WebP o GIF' });
+      }
+      if (image.size > MAX_IMAGE_BYTES) {
+        return res.status(400).json({ error: 'La imagen supera el máximo de 5MB' });
+      }
+    }
+
     if (RESEND_API_KEY) {
+      const imageNote = image ? '\n\n[El aviso incluye una imagen adjunta]' : '';
       const { error: emailError } = await resend.emails.send({
         from: MAIL_FROM,
         to: MAIL_TO,
         replyTo: email,
         subject: 'Nuevo aviso - Comercializadora Los Olivos',
-        text: `Nombre: ${name}\nTeléfono: ${phone}\nEmail: ${email}\n\nAviso:\n${comment}`,
+        text: `Nombre: ${name}\nTeléfono: ${phone}\nEmail: ${email}\n\nAviso:\n${comment}${imageNote}`,
         html: `
           <h2>Nuevo aviso recibido</h2>
           <p><strong>Nombre:</strong> ${name}</p>
@@ -116,6 +145,7 @@ app.post('/api/aviso', async (req, res) => {
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Aviso:</strong></p>
           <p>${comment.replace(/\n/g, '<br>')}</p>
+          ${image ? '<p><em>(Incluye imagen adjunta, visible en la página de avisos)</em></p>' : ''}
         `,
       });
 
@@ -124,27 +154,55 @@ app.post('/api/aviso', async (req, res) => {
       }
     }
 
-    if (supabase) {
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + THIRTY_DAYS_MS);
+    if (!supabase) {
+      return res.status(200).json({ ok: true, message: 'Aviso enviado correctamente' });
+    }
 
-      const { error: dbError } = await supabase
-        .from('avisos')
-        .insert({
-          name,
-          phone,
-          email,
-          comment,
-          created_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
-        });
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + THIRTY_DAYS_MS);
 
-      if (dbError) {
-        console.error('[avisos] Error Supabase INSERT:', dbError.message);
+    const { data: inserted, error: dbError } = await supabase
+      .from('avisos')
+      .insert({
+        name,
+        phone,
+        email,
+        comment,
+        created_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (dbError) {
+      console.error('[avisos] Error Supabase INSERT:', dbError.message);
+      return res.status(500).json({ error: 'No se pudo guardar el aviso' });
+    }
+
+    const avisoId = inserted?.id ?? null;
+
+    if (image && avisoId && reactionsDb) {
+      const ext = image.mimetype === 'image/jpeg' ? 'jpg' : image.mimetype.split('/')[1];
+      const storagePath = `${avisoId}/${Date.now()}.${ext}`;
+
+      const { error: upError } = await reactionsDb.storage
+        .from('aviso-images')
+        .upload(storagePath, image.buffer, { contentType: image.mimetype, upsert: true });
+
+      if (upError) {
+        console.error('[avisos] Error subida imagen:', upError.message);
+      } else {
+        const { error: imgError } = await reactionsDb
+          .from('aviso_images')
+          .insert({ aviso_id: avisoId, storage_path: storagePath, mime_type: image.mimetype });
+
+        if (imgError) {
+          console.error('[avisos] Error registro imagen:', imgError.message);
+        }
       }
     }
 
-    return res.status(200).json({ ok: true, message: 'Aviso enviado correctamente' });
+    return res.status(200).json({ ok: true, id: avisoId, message: 'Aviso enviado correctamente' });
   } catch (error) {
     console.error('Error al procesar aviso:', error);
     return res.status(500).json({ error: 'No se pudo enviar el aviso' });
@@ -232,6 +290,21 @@ app.post('/api/avisos/:id/react', async (req, res) => {
     console.error('[avisos] Error inesperado en react:', err);
     return res.status(500).json({ error: 'No se pudo actualizar la reacción' });
   }
+});
+
+// ─── Manejo de errores de subida y parsing (multer / body-parser) ───
+app.use((err, _req, res, _next) => {
+  if (err instanceof multer.MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'La imagen supera el máximo de 5MB'
+      : 'Error al procesar el formulario';
+    return res.status(400).json({ error: message });
+  }
+  if (err) {
+    console.error('[server] Error en petición:', err.message);
+    return res.status(400).json({ error: err.message || 'Petición inválida' });
+  }
+  return res.status(500).json({ error: 'Error interno del servidor' });
 });
 
 // ─── Keep-alive: ping mutuo cada 5 minutos para evitar sleep en Render ───

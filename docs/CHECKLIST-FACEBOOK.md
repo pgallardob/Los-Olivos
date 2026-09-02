@@ -20,7 +20,7 @@ Guía de operación y estado del sistema (septiembre 2026).
 4. ~~Eliminar avisos de prueba 12 y 13~~ **HECHO 2-sep**: eliminados por completo (`avisos` + `aviso_images` + `aviso_facebook` + `aviso_reactions` + 2 objetos del bucket). Quedan 5 avisos reales (ids 1–5), verificado en la API pública.
 5. **Verificación end-to-end final** con un aviso real del cliente (modal con imagen → email → web con imagen → panel → publicado)
 6. ~~Subir `dist-update.zip` v3~~ **HECHO 2-sep 13:10**: subido y **confirmado por el cliente** — layout imagen-izquierda/texto-derecha OK en producción, `.htaccess` anti-cache activo, botones del panel ajustados vía Render.
-7. **Subir `dist-update.zip` v4** (regenerado 2-sep 13:23, bundle `avisos-BQb4lxzt.js`, CSS `chunk-C46Vdk2E.css`) — a pedido del cliente: alto de la miniatura reducido a la mitad (aspect 3:2, máx. 140px) manteniendo el ancho. Subir por File Manager; con el `.htaccess` activo basta un F5 normal. Al confirmar, eliminar el aviso de prueba id 14.
+7. ~~Subir `dist-update.zip` v4~~ **SUPERSEDO por v5**: se detectó 2-sep 13:40 que v3/v4 nunca llegaron al servidor (producción seguía en la subida de las 12:14; el usuario subía un zip antiguo descargado). **HECHO 2-sep 14:02 con `dist-update-v5.zip`** (nombre distintivo para evitar confusiones; bundle `avisos-CiQrEVFo.js`, CSS `chunk-rkPJhU_T.css`): ancho 38% + alto a la mitad (aspect 3:2, máx. 190px). **Verificado en servidor**: regla presente en el CSS servido, HTML referenciando v5, y `Cache-Control: no-cache, must-revalidate` activo (el `.htaccess` funciona — los futuros deploys se verán con un simple F5). Pendiente: confirmación visual del cliente → eliminar aviso de prueba id 14.
 
 ## ⚠️ Incidente de hosting (1-sep-2026) — en resolución
 

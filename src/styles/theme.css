@@ -1809,14 +1809,14 @@ sl-button[variant="default"]::part(base):hover {
 }
 
 .aviso-card-figure {
-  flex: 0 0 auto;
-  width: clamp(120px, 32%, 200px);
+  flex: 0 0 38%;
+  max-width: 38%;
   margin: 0;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid rgba(169, 194, 90, 0.25);
   aspect-ratio: 3 / 2;
-  max-height: 140px;
+  max-height: 190px;
 }
 
 .aviso-card-image {
@@ -1833,6 +1833,7 @@ sl-button[variant="default"]::part(base):hover {
 
 @media (max-width: 420px) {
   .aviso-card-figure {
-    width: clamp(96px, 38%, 140px);
+    flex-basis: 42%;
+    max-width: 42%;
   }
 }

@@ -24,6 +24,9 @@ import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.j
 import { initNavbar } from './components/navbar';
 import { initFooter } from './components/footer';
 import { initCatalog } from './components/catalog';
+import { initCart } from './components/cart';
+import { initOpenStatus } from './components/open-status';
+import { initQrModal } from './components/qr-modal';
 import { initTooltips } from './utils/tooltips';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
@@ -32,10 +35,17 @@ document.body.classList.add('styles-ready');
 
 async function bootstrap(): Promise<void> {
   initNavbar();
-  await Promise.all([initFooter(), initCatalog()]);
+  initOpenStatus();
+  initCart();
+  try {
+    await Promise.all([initFooter(), initCatalog()]);
+  } catch (err) {
+    console.error('[bootstrap] Error en initFooter/initCatalog:', err);
+  }
   initTooltips();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   void bootstrap();
+  initQrModal();
 });

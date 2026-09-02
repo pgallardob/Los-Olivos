@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+.env.development.local
 server/.env
 server/avisos.json
 backend/.env
@@ -10,3 +11,7 @@ backend/data/productos.previous.json
 *.local
 .DS_Store
 Thumbs.db
+dist-update-*.zip
+deploy-result.txt
+ftp-test-result.txt
+test-ftp.ps1

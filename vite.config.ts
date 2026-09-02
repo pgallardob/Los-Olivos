@@ -11,6 +11,7 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         productos: fileURLToPath(new URL('./productos.html', import.meta.url)),
         avisos: fileURLToPath(new URL('./avisos.html', import.meta.url)),
+        recetas: fileURLToPath(new URL('./recetas.html', import.meta.url)),
       },
     },
   },

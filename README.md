@@ -12,7 +12,7 @@ ligeras. Sin frameworks pesados.
 | Lógica | TypeScript (módulos ES) |
 | Estilos base | Pico CSS |
 | UI compleja | Shoelace (Web Components) |
-| Carrusel hero | Swiper.js v12 (≥ 12.1.2 por seguridad) |
+| Carrusel hero | Swiper.js v12 |
 | Microinteracciones | AutoAnimate |
 | Modales / feedback | SweetAlert2 |
 | Tooltips | Tippy.js |
@@ -34,24 +34,32 @@ ligeras. Sin frameworks pesados.
 
 ```
 /
-├── index.html                 # Estructura semántica (sin lógica ni estilos)
-├── productos.html             # Página de catálogo de productos
-├── avisos.html                # Página de avisos vigentes (noticias publicadas)
+├── index.html                 # Landing page principal
+├── productos.html             # Catálogo de productos + carrito WhatsApp
+├── avisos.html                # Avisos vigentes con reacciones
+├── recetas.html               # Recetario con ingredientes enlazados a productos
 ├── src/
-│   ├── main.ts                # Punto de entrada index: importa estilos e inicializa módulos
-│   ├── products-main.ts       # Punto de entrada productos: navbar + catálogo + footer
-│   ├── avisos-main.ts         # Punto de entrada avisos: fetch + render + countdown
+│   ├── main.ts                # Entry point index: navbar + hero + cards + footer + QR modal
+│   ├── products-main.ts       # Entry point productos: navbar + catálogo + carrito + footer + QR
+│   ├── avisos-main.ts         # Entry point avisos: fetch + render + countdown + footer + QR
+│   ├── recipes-main.ts        # Entry point recetas: navbar + recetas + footer + QR
 │   ├── components/
 │   │   ├── navbar.ts          # Navbar responsive + drawer móvil + modal de aviso
 │   │   ├── hero.ts            # Carrusel Swiper con paginación horizontal
 │   │   ├── cards.ts           # Render de cards desde datos tipados
-│   │   ├── catalog.ts         # Catálogo de productos con filtros, paginación e imágenes
+│   │   ├── catalog.ts         # Catálogo con filtros, paginación, imágenes y botón "Agregar"
+│   │   ├── cart.ts            # Carrito de pedidos por WhatsApp (FAB + panel lateral)
+│   │   ├── open-status.ts     # Badge "Abierto ahora" / "Cerrado" en navbar (tiempo real)
+│   │   ├── recipes.ts         # Render de cards de recetas con ingredientes enlazados
+│   │   ├── qr-modal.ts        # Modal del QR del footer (reutilizable en todas las páginas)
 │   │   ├── chatbot.ts         # Widget de chatbot flotante (conecta con backend Gemini)
-│   │   └── footer.ts          # Footer: contacto, redes, links de interés, mapa modal
+│   │   └── footer.ts          # Footer: contacto, redes, links de interés, horario
 │   ├── data/
-│   │   └── products.ts        # Productos y categorías estáticas del catálogo
+│   │   ├── products.ts        # Productos y categorías estáticas (fallback)
+│   │   └── recipes.ts         # Recetas estáticas con ingredientes
 │   ├── services/
-│   │   └── api.ts             # Datos tipados (simula API; fácil de conectar a backend)
+│   │   ├── api.ts             # Datos tipados del negocio
+│   │   └── supabase-client.ts # Cliente Supabase para productos
 │   ├── styles/
 │   │   ├── theme.css          # Identidad visual (paleta oliva/grafito/metálico)
 │   │   └── chatbot.css        # Estilos del widget de chatbot
@@ -59,188 +67,147 @@ ligeras. Sin frameworks pesados.
 │       ├── animations.ts      # AutoAnimate en contenedores dinámicos
 │       └── tooltips.ts        # Tippy.js
 ├── backend/                   # Backend Express del chatbot (Gemini IA + Supabase sync)
-│   ├── src/
-│   │   ├── config/config.js          # Carga de variables de entorno
-│   │   ├── controllers/
-│   │   │   └── chat.controller.js    # Lógica del endpoint /chat
-│   │   ├── repositories/
-│   │   │   └── product.repository.js # Consultas a Supabase
-│   │   ├── routes/
-│   │   │   ├── chat.routes.js        # Ruta POST /chat + validación
-│   │   │   └── health.routes.js      # Rutas GET /health, /sync/status
-│   │   ├── scripts/
-│   │   │   └── run-sync.js           # Script de sync manual
-│   │   ├── services/
-│   │   │   ├── ai/                   # Abstracción de IA (Gemini + prompt anti-alucinación)
-│   │   │   ├── business.service.js   # Lee negocio.json
-│   │   │   ├── product.service.js    # Catálogo en memoria
-│   │   │   ├── search.service.js     # Búsqueda local + detección de intención + typo tolerance
-│   │   │   └── sync.service.js       # Sincronización + scheduler cron
-│   │   ├── utils/
-│   │   │   ├── json-storage.js       # Escritura segura de JSON
-│   │   │   └── normalize.js          # Normalización + Levenshtein + spell match
-│   │   └── server.js                 # Entry point Express
-│   ├── data/
-│   │   ├── negocio.json              # Info del negocio (manual)
-│   │   └── productos.json            # Cache de productos (auto-generado por sync)
-│   └── .env.example
 ├── server/                    # Backend Express para avisos + email (Resend API)
-│   ├── server.js
-│   ├── avisos.json            # Persistencia de avisos (con expiración 30 días)
-│   ├── package.json
-│   └── .env                   # RESEND_API_KEY, MAIL_TO, MAIL_FROM
-├── public/
-│   ├── assets/sinimg.jpeg     # Imagen por defecto para cards sin imagen (copiado a dist/)
-│   ├── robots.txt             # SEO: directivas para crawlers
-│   └── sitemap.xml            # SEO: sitemap con las 3 páginas
-├── assets/                    # Logo, imágenes de ofertas, hero, sinimg.jpeg, logos de links
-├── docs/                      # Plan de trabajo, plan de negocios, arquitectura, guía de estilo
+├── public/                    # .htaccess, robots.txt, sitemap.xml, sinimg.jpeg, QR
+├── assets/                    # Logo, QR, sinimg.jpeg
+├── docs/                      # Documentación del proyecto
+├── deploy-ftp.ps1             # Script de deploy FTP a producción
+├── deploy-check.ps1           # Script de verificación post-deploy
 ├── .env / .env.example        # Variables de entorno
 ├── package.json
 ├── tsconfig.json
-└── vite.config.ts             # Multi-page (index + productos + avisos)
+└── vite.config.ts             # Multi-page (index + productos + avisos + recetas)
 ```
 
 ## Comandos
 
 ```bash
-pnpm install       # instalar dependencias
-pnpm dev           # servidor de desarrollo (http://localhost:5173)
-pnpm build         # typecheck + build de producción (dist/)
-pnpm preview       # previsualizar el build
-pnpm typecheck     # solo verificación de tipos
+npm install        # instalar dependencias
+npm run dev        # servidor de desarrollo (http://localhost:5173)
+npm run build      # typecheck + build de producción (dist/)
+npm run preview    # previsualizar el build
+npm run typecheck  # solo verificación de tipos
 ```
 
-> **Nota:** Usar `pnpm` (no `npm`). El proyecto usa pnpm como gestor de paquetes.
+## Deploy a producción
 
-## Contenido y configuración
-
-Todo dato de negocio (nombre, contacto, redes, formulario) está centralizado en `.env`
-(usar `.env.example` como plantilla) y `src/services/api.ts`.
-
-### Variables de entorno importantes
+### Deploy FTP automático
 
 ```bash
-# Identidad
-VITE_COMPANY_NAME="Comercializadora Los Olivos"
-VITE_COMPANY_TAGLINE="Comercializadora Los Olivos E.I.R.L."
+npm run build
+powershell -ExecutionPolicy Bypass -File deploy-ftp.ps1
+```
 
-# Contacto
-VITE_CONTACT_EMAIL="contacto@ejemplo.com"
+El script `deploy-ftp.ps1` sube todos los archivos de `dist/` al hosting
+(administrable.cl / Webuzo) por FTP. Credenciales configuradas en el script.
+
+### Verificación post-deploy
+
+```bash
+powershell -ExecutionPolicy Bypass -File deploy-check.ps1
+```
+
+## Features
+
+### Carrito de pedidos por WhatsApp (`productos.html`)
+
+- Botón "+ Agregar" en cada tarjeta de producto
+- Botón flotante (FAB) con contador de items
+- Panel lateral con lista de productos, cantidades y total
+- Envío del pedido por WhatsApp al número del negocio (56964194547)
+- Componente: `src/components/cart.ts`
+
+### Banner "Abierto ahora" (navbar, todas las páginas)
+
+- Indicador verde ("Abierto ahora") o rojo ("Cerrado ahora") según horario
+- Horario: Lun–Sab 10:00–20:00 hrs
+- Se actualiza automáticamente cada minuto
+- En móvil muestra versión compacta ("Abierto" / "Cerrado")
+- Componente: `src/components/open-status.ts`
+
+### Recetario (`recetas.html`)
+
+- Página con recetas fáciles usando productos del almacén
+- Cada receta: título, descripción, porciones, tiempo, ingredientes y pasos
+- Ingredientes del almacén enlazados al catálogo de productos
+- Componentes: `src/components/recipes.ts`, `src/data/recipes.ts`
+
+### QR en footer (todas las páginas)
+
+- Imagen QR con botón "Scanear" que abre un modal ampliado
+- Presente en index, productos, avisos y recetas
+- Componente: `src/components/qr-modal.ts`
+
+### Catálogo de productos (`productos.html`)
+
+- Productos cargados desde Supabase (fallback a datos estáticos)
+- Filtros por categoría, paginación
+- Imagen del producto o placeholder `sinimg.jpeg`
+- Botón "+ Agregar" alineado al fondo de cada card
+
+### Avisos (`avisos.html`)
+
+- Avisos vigentes con expiración de 30 días
+- Reacciones (Me gusta / Me encanta)
+- Contador regresivo de vigencia
+- Footer con QR y links de interés
+
+## Variables de entorno
+
+Ver `.env.example` como plantilla. Variables importantes:
+
+```bash
+VITE_COMPANY_NAME="Comercializadora Los Olivos"
+VITE_CONTACT_EMAIL="paulinacontreras@comercializadoralosolivos.cl"
 VITE_CONTACT_PHONE="+569 64 19 4547 - +569 30 74 8991"
 VITE_CONTACT_ADDRESS="Concordia 408 Local A, Peñaflor, Santiago, Chile"
 VITE_CONTACT_HOURS="Lun–Sab 10:00–20:00 hrs"
-
-# Redes sociales (Síguenos)
-VITE_SOCIAL_INSTAGRAM="https://www.instagram.com/comercializadora_los_olivos_?igsh=..."
-VITE_SOCIAL_TIKTOK=""
 VITE_SOCIAL_WHATSAPP="https://wa.me/56964194547"
-VITE_SOCIAL_FACEBOOK=""
-
-# Links de interés (logos personalizados en api.ts, no usa estas vars)
-VITE_SOCIAL_LINKS_INSTAGRAM=""
-VITE_SOCIAL_LINKS_TIKTOK=""
-VITE_SOCIAL_LINKS_WHATSAPP=""
-VITE_SOCIAL_LINKS_FACEBOOK=""
-
-# Backend de avisos (POST — formulario)
-VITE_FORM_ENDPOINT="http://localhost:3001/api/aviso"
-
-# Backend de avisos (GET — lista de avisos)
-VITE_AVISOS_API_URL="http://localhost:3001"
-
-# Backend del chatbot
-VITE_CHATBOT_API_URL="http://localhost:3002/api"
-
-# Email fallback (si no hay VITE_FORM_ENDPOINT)
-VITE_FALLBACK_EMAIL="pgallardob@hotmail.com"
+VITE_AVISOS_API_URL="https://los-olivos-avisos.onrender.com"
+VITE_CHATBOT_API_URL="https://los-olivos-chatbot.onrender.com/api"
+VITE_SUPABASE_URL="..."
+VITE_SUPABASE_ANON_KEY="..."
 ```
 
-Para lanzar a producción:
+## Backends
 
-1. Completar `.env` con las URLs reales de los backends.
-2. Sustituir `assets/logoolivos.jpeg` por el logo real.
-3. Sustituir `assets/oferta*.jpeg` por imágenes reales (optimizadas, WebP/JPEG).
-4. Ajustar textos en `src/services/api.ts` si es necesario.
-5. Ejecutar `pnpm run build`.
-6. Desplegar el contenido de `dist/` en un hosting estático.
+### Chatbot (`backend/`)
 
-## Catálogo de productos
-
-La página `/productos.html` muestra un catálogo estático con productos agrupados por
-categorías (abarrotes, aseo, hogar, alimentos, bebidas). Los productos se definen en
-`src/data/products.ts` con nombre, marca y categoría.
-
-### Carga de imágenes
-
-1. Si el producto tiene campo `imagen`, se usa esa URL.
-2. Si no tiene imagen, se muestra `assets/sinimg.jpeg` como placeholder.
-
-## Chatbot (backend)
-
-El backend Express en `backend/` sincroniza productos desde Supabase (ERP) y atiende
-las consultas del chatbot usando Gemini IA. El widget flotante aparece en todas las páginas.
-
-### Features del chatbot
-
-- **Búsqueda local con scoring**: match exacto, por inclusión, fuzzy, categoría, marca
-- **Tolerancia ortográfica**: Levenshtein distance para encontrar productos con errores de tipeo (ej: "huebo" → "huevo")
-- **Case-sensitive scoring**: bonus cuando el case del query coincide exactamente con el producto
-- **Detección de intención**: saludo, despedida, negocio (horarios, ubicación, delivery, pagos), producto, sugerencia
-- **Sugerencias de productos**: responde a "sugiereme algo" con productos aleatorios del catálogo
-- **Aclaración para consultas genéricas**: si una palabra tiene 4+ resultados, pide especificar tipo/marca
-- **Respuestas directas sin IA**: saludos, despedidas e info del negocio se responden sin llamar a Gemini
-- **Fallback con productos**: si Gemini falla, muestra los productos encontrados localmente
-- **Prompt anti-alucinación**: Gemini solo usa el contexto enviado, nunca inventa precios ni stock
+Express + Gemini IA + Supabase sync. Deploy automático en Render.
 
 ```bash
 cd backend
-pnpm install --ignore-workspace
+npm install
 cp .env.example .env  # completar credenciales
-pnpm dev          # Backend en http://localhost:3002
+npm run dev          # http://localhost:3002
 ```
 
-Ver [`backend/README.md`](backend/README.md) para detalles completos.
+### Avisos (`server/`)
 
-## Backend (avisos)
-
-El servidor Express en `server/` maneja el formulario de avisos del modal "Envianos tu aviso".
-Persiste los avisos en `server/avisos.json` con expiración de 30 días y envía notificaciones
-por email usando la API de Resend. Requiere `RESEND_API_KEY` en `server/.env`.
-CORS soporta múltiples orígenes separados por coma en `CLIENT_ORIGIN`.
+Express + Resend API (email). Deploy automático en Render.
 
 ```bash
 cd server
-pnpm install
-pnpm dev          # Backend en http://localhost:3001
+npm install
+npm run dev          # http://localhost:3001
 ```
 
-### Endpoints
+#### Endpoints
 
-- `GET /api/avisos` — lista avisos no expirados (prune automático).
-- `POST /api/aviso` — recibe `{ name, phone, email, comment }`, guarda con `expiresAt` (30 días).
-
-## Página de avisos (`/avisos.html`)
-
-Muestra los avisos vigentes publicados por los usuarios. Cada aviso incluye nombre,
-correo, mensaje, fecha de publicación y contador regresivo de vigencia (30 días).
-Los avisos expirados se eliminan automáticamente del backend y del frontend.
-
-## Prevención de FOUC
-
-Cada página incluye CSS crítico inline en `<head>` (fondo oscuro + `body { visibility: hidden }`)
-y los entry points TS agregan la clase `styles-ready` al body después de cargar los estilos,
-evitando el flash de contenido sin estilos al navegar entre páginas.
+- `GET /api/avisos` — lista avisos no expirados
+- `POST /api/aviso` — recibe `{ name, phone, email, comment }`, guarda con expiración 30 días
+- `POST /api/avisos/:id/react` — reacciones (like/love, add/remove)
+- Panel admin en `/admin` (requiere `ADMIN_PASSWORD`)
 
 ## SEO
 
-Las 3 páginas incluyen metadatos optimizados:
+Las 4 páginas incluyen metadatos optimizados:
 
-- **Meta description** específica por página
-- **Open Graph** (type, site_name, title, description, locale es_CL, image)
-- **Twitter Cards** (summary_large_image en index, summary en productos/avisos)
-- **theme-color** (#0b0e0c)
-- **robots.txt** y **sitemap.xml** en `public/` (incluidos automáticamente en `dist/`)
+- Meta description específica por página
+- Open Graph + Twitter Cards
+- theme-color (#0b0e0c)
+- robots.txt y sitemap.xml en `public/`
+- Datos estructurados (BreadcrumbList en avisos)
 
 ## Documentación
 
@@ -251,4 +218,6 @@ Las 3 páginas incluyen metadatos optimizados:
 - [Plan del catálogo](docs/PLAN_CATALOGO.md)
 - [Plan del chatbot](docs/planchatbot.md)
 - [Plan de implementación](docs/plandeimplementacion.md)
-- [Auditoría ERP](docs/ERP_AUDIT.md)
+- [Checklist Facebook](docs/CHECKLIST-FACEBOOK.md)
+- [Checklist Deploy](docs/CHECKLIST_DEPLOY.md)
+- [Plan de imágenes de productos](docs/PLAN_IMAGENES_PRODUCTOS.md)

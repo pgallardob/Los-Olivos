@@ -7,7 +7,12 @@ import '@picocss/pico/css/pico.min.css';
 import '@shoelace-style/shoelace/dist/themes/dark.css';
 import './styles/theme.css';
 
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
 import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js';
+
+import { initFooter } from './components/footer';
+import { initQrModal } from './components/qr-modal';
 
 setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
 
@@ -329,3 +334,8 @@ async function loadAvisos(): Promise<void> {
 }
 
 loadAvisos();
+
+document.addEventListener('DOMContentLoaded', () => {
+  void initFooter();
+  initQrModal();
+});

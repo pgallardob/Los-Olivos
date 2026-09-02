@@ -6,6 +6,7 @@ import {
   type Product,
 } from '../data/products';
 import { fetchProducts, type SupabaseProduct } from '../services/supabase-client';
+import { addToCart } from './cart';
 
 
 type CategoryId = string;
@@ -299,6 +300,17 @@ function createProductCard(
 
     body.append(priceEl);
   }
+
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'catalog-card-add';
+  addBtn.textContent = '+ Agregar';
+  addBtn.setAttribute('aria-label', `Agregar ${product.nombre} al carrito`);
+  addBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    addToCart(product);
+  });
+  body.append(addBtn);
 
   card.append(
     imgWrap,

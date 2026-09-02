@@ -1815,8 +1815,8 @@ sl-button[variant="default"]::part(base):hover {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid rgba(169, 194, 90, 0.25);
-  aspect-ratio: 3 / 4;
-  max-height: 280px;
+  aspect-ratio: 3 / 2;
+  max-height: 140px;
 }
 
 .aviso-card-image {

@@ -19,7 +19,8 @@ Guía de operación y estado del sistema (septiembre 2026).
 3. **Contraseña FTP inválida** (error 530) — verificado 2-sep: sigue rechazada. **Correo de seguimiento enviado 2-sep 12:05** (restablecer contraseña FTP usuario `yftqrecu` + desbloquear IP si está en lfd + confirmar host). Cuando llegue: actualizar `deploy-ftp.ps1` → `deploy-check.ps1` → deploy FTP operativo. Método vigente de deploy: **Webuzo File Manager + zip**.
 4. ~~Eliminar avisos de prueba 12 y 13~~ **HECHO 2-sep**: eliminados por completo (`avisos` + `aviso_images` + `aviso_facebook` + `aviso_reactions` + 2 objetos del bucket). Quedan 5 avisos reales (ids 1–5), verificado en la API pública.
 5. **Verificación end-to-end final** con un aviso real del cliente (modal con imagen → email → web con imagen → panel → publicado)
-6. **Subir `dist-update.zip` v3** (regenerado 2-sep 13:00, bundle `avisos-CMF0z1oA.js`) — miniatura compacta (clamp 120–200px, 3:4) + `.htaccess` con `Cache-Control: no-cache` para HTML (evita que el navegador muestre versiones viejas tras cada deploy). Subir por File Manager igual que antes y **verificar en ventana de incógnito** con el aviso de prueba id 14 (PRUEBA LAYOUT). Botones del panel (más pequeños y centrados) van por Render con el push, sin subir nada.
+6. ~~Subir `dist-update.zip` v3~~ **HECHO 2-sep 13:10**: subido y **confirmado por el cliente** — layout imagen-izquierda/texto-derecha OK en producción, `.htaccess` anti-cache activo, botones del panel ajustados vía Render.
+7. **Subir `dist-update.zip` v4** (regenerado 2-sep 13:23, bundle `avisos-BQb4lxzt.js`, CSS `chunk-C46Vdk2E.css`) — a pedido del cliente: alto de la miniatura reducido a la mitad (aspect 3:2, máx. 140px) manteniendo el ancho. Subir por File Manager; con el `.htaccess` activo basta un F5 normal. Al confirmar, eliminar el aviso de prueba id 14.
 
 ## ⚠️ Incidente de hosting (1-sep-2026) — en resolución
 

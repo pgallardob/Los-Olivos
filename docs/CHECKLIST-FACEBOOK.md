@@ -14,9 +14,9 @@ Guía de operación y estado del sistema (septiembre 2026).
 
 ## 📋 Pendientes para la próxima sesión
 
-1. **Subir el NUEVO `dist-update.zip`** (layout imagen-izquierda/texto-derecha, commit `4e75048`, bundle `avisos-ZiAUOyE3.js`) — subir por Webuzo File Manager → `public_html` → extraer → aceptar reemplazos → borrar zip → verificar `avisos.html` con Ctrl+F5. **Verificado 2-sep: producción todavía tiene el layout viejo (bundle `avisos-D-HDKq2u.js`, sin `aviso-card-content`)** — el zip subido el 1-sep no era el regenerado. **Zip local verificado 2-sep 12:00: el `dist-update.zip` actual (creado 01-09 16:53) es el correcto — contiene `avisos-ZiAUOyE3.js` y es idéntico a `dist/`; solo falta la subida por File Manager.**
+1. ~~Subir el NUEVO `dist-update.zip`~~ **HECHO 2-sep 12:15**: subido por File Manager y **verificado en producción** — `avisos.html` sirve `avisos-ZiAUOyE3.js` (HTTP 200, 5.668 bytes, idéntico al local), `index.html` y `productos.html` con bundles nuevos. El layout imagen-izquierda/texto-derecha está vivo; se verá con imágenes cuando llegue un aviso con foto (los 5 actuales son solo texto).
 2. ~~Eliminar el aviso DEMO~~ **HECHO 2-sep**: eliminado de `avisos` + `aviso_images` + `aviso_facebook` + objeto en bucket (carpeta 11 vacía, 7 avisos visibles).
-3. **Contraseña FTP inválida** (error 530) — **verificado 2-sep: sigue rechazada**; esperando restablecimiento de soporte@administrable.cl. Cuando llegue: actualizar `deploy-ftp.ps1` → `deploy-check.ps1` → deploy FTP operativo. Método vigente de deploy: **Webuzo File Manager + zip**.
+3. **Contraseña FTP inválida** (error 530) — verificado 2-sep: sigue rechazada. **Correo de seguimiento enviado 2-sep 12:05** (restablecer contraseña FTP usuario `yftqrecu` + desbloquear IP si está en lfd + confirmar host). Cuando llegue: actualizar `deploy-ftp.ps1` → `deploy-check.ps1` → deploy FTP operativo. Método vigente de deploy: **Webuzo File Manager + zip**.
 4. ~~Eliminar avisos de prueba 12 y 13~~ **HECHO 2-sep**: eliminados por completo (`avisos` + `aviso_images` + `aviso_facebook` + `aviso_reactions` + 2 objetos del bucket). Quedan 5 avisos reales (ids 1–5), verificado en la API pública.
 5. **Verificación end-to-end final** con un aviso real del cliente (modal con imagen → email → web con imagen → panel → publicado)
 

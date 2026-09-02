@@ -356,6 +356,7 @@ app.post('/api/avisos/:id/react', async (req, res) => {
 
 // ─── Panel de administración (privado, protegido por contraseña) ───
 app.get('/admin', (_req, res) => {
+  res.set('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 

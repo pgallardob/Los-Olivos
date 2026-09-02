@@ -9,18 +9,27 @@ Guía de operación y estado del sistema (septiembre 2026).
 - [x] Fase 3 — Texto para Facebook generado automáticamente y registrado como `pendiente` al publicar cada aviso
 - [x] Fase 4 — Panel de administración privado en `/admin` (desplegado y verificado en Render)
 - [x] Fase 5 — Frontend: input de imagen en el modal de aviso y render de imágenes en las cards
-- [ ] Fase 6 — **PENDIENTE/BLOQUEADA**: subir la carpeta `dist/` al hosting (ver incidente abajo)
+- [x] Fase 6 — Frontend desplegado al hosting vía File Manager de Webuzo (zip), verificado en producción
 - [x] Fase 7 — Esta guía
+
+## 📋 Pendientes para la próxima sesión
+
+1. **Subir el NUEVO `dist-update.zip`** (layout imagen-izquierda/texto-derecha, commit `4e75048`, bundle `avisos-ZiAUOyE3.js`) — subir por Webuzo File Manager → `public_html` → extraer → aceptar reemplazos → borrar zip → verificar `avisos.html` con Ctrl+F5. **Verificado 2-sep: producción todavía tiene el layout viejo (bundle `avisos-D-HDKq2u.js`, sin `aviso-card-content`)** — el zip subido el 1-sep no era el regenerado.
+2. ~~Eliminar el aviso DEMO~~ **HECHO 2-sep**: eliminado de `avisos` + `aviso_images` + `aviso_facebook` + objeto en bucket (carpeta 11 vacía, 7 avisos visibles).
+3. **Contraseña FTP inválida** (error 530) — **verificado 2-sep: sigue rechazada**; esperando restablecimiento de soporte@administrable.cl. Cuando llegue: actualizar `deploy-ftp.ps1` → `deploy-check.ps1` → deploy FTP operativo. Método vigente de deploy: **Webuzo File Manager + zip**.
+4. **Decidir qué hacer con los avisos de prueba 12 y 13** ("patricio", ambos con imagen, creados desde el modal el 1-2 sep) — si son pruebas, eliminarlos igual que el demo.
+5. **Verificación end-to-end final** con un aviso real del cliente (modal con imagen → email → web con imagen → panel → publicado)
 
 ## ⚠️ Incidente de hosting (1-sep-2026) — en resolución
 
 1. El script de deploy FTP intentó subir con las credenciales del email de bienvenida (usuario `yftqrecu`) y el servidor las rechazó (error 530) desde el primer intento — funcionaban en despliegues anteriores.
 2. Los reintentos automáticos del script dispararon el firewall del hosting: la IP `186.189.106.174` quedó bloqueada (puertos 21/80/443/2003). El sitio público sigue funcionando para el resto del mundo (verificado).
 3. Se envió correo a **soporte@administrable.cl** solicitando: desbloquear la IP + verificar/restablecer la contraseña FTP.
-4. `deploy-ftp.ps1` fue reescrito: host por IP (136.243.227.82, según email de bienvenida), **sin reintentos**, prueba única de login antes de subir y detención total ante error 530.
-5. `deploy-check.ps1` (nuevo): verifica en un comando si el baneo sigue activo y si las credenciales FTP ya funcionan — **usarlo antes de cualquier intento de deploy**.
-6. `dist-update.zip` (1,25 MB) quedó listo en la raíz del proyecto como alternativa para subir por File Manager del panel Webuzo.
-7. `ADMIN_PASSWORD` ya está configurada en Render (panel operativo).
+4. **1-sep 16:07**: el soporte levantó el bloqueo (lfd: 10 logins FTP fallidos/hora). La contraseña FTP sigue rechazada (530) — pendiente restablecer con el soporte.
+5. **1-sep 16:23**: `dist/` (versión fase 5) subido por **File Manager de Webuzo** (`dist-update.zip` → extraer en `public_html`) — verificado en producción: render de imágenes + input de imagen en modal + estilos.
+6. **1-sep 16:45**: ajuste de layout solicitado por el cliente (imagen demasiado grande) → reescrito a miniatura izquierda (38%, 3:4) + texto derecha (commit `4e75048`). **El zip con este cambio aún no se sube** — es el pendiente 1.
+7. `deploy-ftp.ps1` reescrito: host por IP (136.243.227.82), **sin reintentos**, prueba única de login y detención total ante 530. `deploy-check.ps1` nuevo: estado de baneo + login en un comando.
+8. `ADMIN_PASSWORD` configurada en Render — panel verificado por el cliente (login OK, tarjeta DEMO con imagen, botones funcionando).
 
 ## URL del panel
 

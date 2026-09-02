@@ -622,6 +622,17 @@
       var row = document.createElement('div');
       row.className = 'btn-row';
 
+      var bPrep = document.createElement('button');
+      bPrep.type = 'button'; bPrep.className = 'btn-primary';
+      bPrep.textContent = '🚀 Preparar publicación (1 clic)';
+      bPrep.addEventListener('click', function () {
+        window.open(state.fbGroupUrl, '_blank', 'noopener');
+        copyText(aviso, bPrep);
+        downloadImage(aviso);
+        toast('Grupo abierto · texto copiado · imagen descargada');
+      });
+      row.appendChild(bPrep);
+
       var bCopy = document.createElement('button');
       bCopy.type = 'button'; bCopy.className = 'btn-secondary';
       bCopy.textContent = '⧉ Copiar texto';

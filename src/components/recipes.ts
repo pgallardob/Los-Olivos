@@ -57,7 +57,7 @@ function createRecipeCard(recipe: Recipe): HTMLElement {
 
     if (ing.productId) {
       const link = document.createElement('a');
-      link.href = `/productos.html`;
+      link.href = `/productos.html?producto=${encodeURIComponent(ing.productId)}`;
       link.className = 'recipe-ingredient-link';
       link.textContent = ing.nombre;
       link.title = `Ver ${ing.nombre} en el catálogo`;
@@ -92,13 +92,129 @@ function createRecipeCard(recipe: Recipe): HTMLElement {
   return card;
 }
 
+const RECIPES_PER_PAGE = 3;
+
+let currentCategory = 'Todas';
+let currentPage = 1;
+
+function getCategories(): string[] {
+  const set = new Set<string>();
+  for (const r of RECIPES) set.add(r.categoria);
+  return ['Todas', ...Array.from(set).sort()];
+}
+
+function getFilteredRecipes(): Recipe[] {
+  if (currentCategory === 'Todas') return RECIPES;
+  return RECIPES.filter((r) => r.categoria === currentCategory);
+}
+
+function renderRecipeSelect(container: HTMLElement): void {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'recipes-controls';
+
+  const label = document.createElement('label');
+  label.className = 'recipes-select-label';
+  label.textContent = 'Filtrar por categoría:';
+  label.htmlFor = 'recipes-category-select';
+
+  const select = document.createElement('select');
+  select.id = 'recipes-category-select';
+  select.className = 'recipes-select';
+
+  for (const cat of getCategories()) {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    if (cat === currentCategory) opt.selected = true;
+    select.append(opt);
+  }
+
+  select.addEventListener('change', () => {
+    currentCategory = select.value;
+    currentPage = 1;
+    renderRecipes();
+  });
+
+  wrapper.append(label, select);
+  container.append(wrapper);
+}
+
+function renderPagination(container: HTMLElement, totalPages: number): void {
+  if (totalPages <= 1) return;
+
+  const nav = document.createElement('nav');
+  nav.className = 'recipes-pagination';
+  nav.setAttribute('aria-label', 'Paginación de recetas');
+
+  const prevBtn = document.createElement('button');
+  prevBtn.type = 'button';
+  prevBtn.className = 'recipes-page-btn';
+  prevBtn.textContent = '‹ Anterior';
+  prevBtn.disabled = currentPage <= 1;
+  prevBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderRecipes();
+    }
+  });
+
+  const info = document.createElement('span');
+  info.className = 'recipes-page-info';
+  info.textContent = `Página ${currentPage} de ${totalPages}`;
+
+  const nextBtn = document.createElement('button');
+  nextBtn.type = 'button';
+  nextBtn.className = 'recipes-page-btn';
+  nextBtn.textContent = 'Siguiente ›';
+  nextBtn.disabled = currentPage >= totalPages;
+  nextBtn.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderRecipes();
+    }
+  });
+
+  nav.append(prevBtn, info, nextBtn);
+  container.append(nav);
+}
+
+function renderRecipes(): void {
+  const grid = document.getElementById('recipes-grid');
+  if (!grid) return;
+
+  const section = grid.parentElement;
+  if (!section) return;
+
+  grid.innerHTML = '';
+
+  const filtered = getFilteredRecipes();
+  const totalPages = Math.ceil(filtered.length / RECIPES_PER_PAGE);
+
+  if (currentPage > totalPages) currentPage = 1;
+
+  const start = (currentPage - 1) * RECIPES_PER_PAGE;
+  const pageRecipes = filtered.slice(start, start + RECIPES_PER_PAGE);
+
+  for (const recipe of pageRecipes) {
+    grid.append(createRecipeCard(recipe));
+  }
+
+  const existingPagination = section.querySelector('.recipes-pagination');
+  if (existingPagination) existingPagination.remove();
+
+  renderPagination(section, totalPages);
+}
+
 export function initRecipes(): void {
   const grid = document.getElementById('recipes-grid');
   if (!grid) return;
 
-  grid.innerHTML = '';
+  const section = grid.parentElement;
+  if (!section) return;
 
-  for (const recipe of RECIPES) {
-    grid.append(createRecipeCard(recipe));
-  }
+  const existingControls = section.querySelector('.recipes-controls');
+  if (existingControls) existingControls.remove();
+
+  renderRecipeSelect(section);
+  renderRecipes();
 }

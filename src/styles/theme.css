@@ -1769,6 +1769,17 @@ sl-button[variant="default"]::part(base):hover {
 
 /* --- Imagen del producto --- */
 
+.catalog-card--highlight {
+  animation: catalog-highlight 2s ease;
+  border-color: var(--nx-neon) !important;
+  box-shadow: 0 0 12px rgba(169, 194, 90, 0.4) !important;
+}
+
+@keyframes catalog-highlight {
+  0% { box-shadow: 0 0 20px rgba(169, 194, 90, 0.8); }
+  100% { box-shadow: 0 0 12px rgba(169, 194, 90, 0.4); }
+}
+
 .catalog-card-img {
   width: 100%;
   height: 180px;
@@ -2504,4 +2515,75 @@ sl-button[variant="default"]::part(base):hover {
 .recipe-steps li::marker {
   color: var(--nx-olive-light);
   font-weight: 600;
+}
+
+.recipes-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.recipes-select-label {
+  font-size: 0.85rem;
+  color: var(--nx-metal-light);
+  font-weight: 600;
+}
+
+.recipes-select {
+  background: var(--nx-graphite);
+  color: var(--nx-metal-light);
+  border: 1px solid rgba(169, 194, 90, 0.3);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.recipes-select:focus {
+  outline: none;
+  border-color: var(--nx-olive-light);
+}
+
+.recipes-select:hover {
+  border-color: var(--nx-olive-light);
+}
+
+.recipes-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.recipes-page-btn {
+  background: var(--nx-graphite);
+  color: var(--nx-metal-light);
+  border: 1px solid rgba(169, 194, 90, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.recipes-page-btn:hover:not(:disabled) {
+  border-color: var(--nx-olive-light);
+  background: var(--nx-graphite-soft);
+}
+
+.recipes-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.recipes-page-info {
+  font-size: 0.82rem;
+  color: var(--nx-metal);
 }

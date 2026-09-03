@@ -1,11 +1,11 @@
 /**
  * Indicador "Abierto ahora" en tiempo real.
  * Calcula según la hora local del cliente si el local está abierto
- * basándose en el horario: Lun–Sab 10:00–20:00 hrs.
+ * basándose en el horario: Lun–Sab 10:00–19:00 hrs.
  */
 
 const OPEN_HOUR = 10;
-const CLOSE_HOUR = 20;
+const CLOSE_HOUR = 19;
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // Lun–Sab (0=Domingo)
 
 function isOpenNow(): boolean {

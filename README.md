@@ -120,7 +120,7 @@ powershell -ExecutionPolicy Bypass -File deploy-check.ps1
 ### Banner "Abierto ahora" (navbar, todas las páginas)
 
 - Indicador verde ("Abierto ahora") o rojo ("Cerrado ahora") según horario
-- Horario: Lun–Sab 10:00–20:00 hrs
+- Horario: Lun–Sab 10:00–19:00 hrs
 - Se actualiza automáticamente cada minuto
 - En móvil muestra versión compacta ("Abierto" / "Cerrado")
 - Componente: `src/components/open-status.ts`
@@ -128,8 +128,12 @@ powershell -ExecutionPolicy Bypass -File deploy-check.ps1
 ### Recetario (`recetas.html`)
 
 - Página con recetas fáciles usando productos del almacén
+- 36 recetas en 4 categorías: Almuerzo, Desayuno, Once/Cena, Postre (9 cada una)
 - Cada receta: título, descripción, porciones, tiempo, ingredientes y pasos
 - Ingredientes del almacén enlazados al catálogo de productos
+- Select de filtrado por categoría
+- Paginación: 3 cards por página con botones Anterior/Siguiente
+- Scroll automático al título al cambiar de página o categoría
 - Componentes: `src/components/recipes.ts`, `src/data/recipes.ts`
 
 ### QR en footer (todas las páginas)
@@ -144,6 +148,35 @@ powershell -ExecutionPolicy Bypass -File deploy-check.ps1
 - Filtros por categoría, paginación
 - Imagen del producto o placeholder `sinimg.jpeg`
 - Botón "+ Agregar" alineado al fondo de cada card
+- Modal informativo al ingresar desde navbar: retiro en tienda 2 hrs, pago en efectivo o Redcompra
+
+### Automatización de imágenes (`scripts/auto-images.mjs`)
+
+Script que busca productos sin imagen en Supabase, descarga una imagen real de
+Google Custom Search, la optimiza a WebP 500×500 con sharp, la sube a Supabase
+Storage y actualiza `imagen_url` en la base de datos.
+
+**Requisitos:**
+- `GOOGLE_API_KEY` y `GOOGLE_CX` en `backend/.env` (Google Custom Search API)
+- `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en `backend/.env`
+- Bucket `productos` creado en Supabase Storage
+
+**Uso:**
+```bash
+node scripts/auto-images.mjs --dry-run          # listar productos sin imagen
+node scripts/auto-images.mjs --limit 3          # procesar solo 3
+node scripts/auto-images.mjs --product "Coca"   # filtrar por nombre
+node scripts/auto-images.mjs                    # procesar todos
+```
+
+Para obtener las credenciales de Google:
+1. https://console.cloud.google.com → habilitar Custom Search API → crear API key
+2. https://cse.google.com → crear Custom Search Engine → copiar CX
+3. Agregar a `backend/.env`:
+   ```
+   GOOGLE_API_KEY=tu-key
+   GOOGLE_CX=tu-cx
+   ```
 
 ### Avisos (`avisos.html`)
 
@@ -161,7 +194,7 @@ VITE_COMPANY_NAME="Comercializadora Los Olivos"
 VITE_CONTACT_EMAIL="paulinacontreras@comercializadoralosolivos.cl"
 VITE_CONTACT_PHONE="+569 64 19 4547 - +569 30 74 8991"
 VITE_CONTACT_ADDRESS="Concordia 408 Local A, Peñaflor, Santiago, Chile"
-VITE_CONTACT_HOURS="Lun–Sab 10:00–20:00 hrs"
+VITE_CONTACT_HOURS="Lun–Sab 10:00–19:00 hrs"
 VITE_SOCIAL_WHATSAPP="https://wa.me/56964194547"
 VITE_AVISOS_API_URL="https://los-olivos-avisos.onrender.com"
 VITE_CHATBOT_API_URL="https://los-olivos-chatbot.onrender.com/api"
@@ -208,6 +241,21 @@ Las 4 páginas incluyen metadatos optimizados:
 - theme-color (#0b0e0c)
 - robots.txt y sitemap.xml en `public/`
 - Datos estructurados (BreadcrumbList en avisos)
+
+## Pendientes
+
+### Tareas manuales externas
+
+1. **Resend**: registros DNS agregados (DKIM TXT + 2 CNAME), falta click "Verify" en resend.com/domains. Luego actualizar `MAIL_FROM` en Render.
+2. **Google Search Console**: agregar propiedad y enviar sitemap.
+3. **Google My Business**: crear ficha en Google Maps.
+
+### Tareas de desarrollo
+
+4. **Productos sin imagen en Supabase**: el sistema muestra placeholder `sinimg.jpeg` cuando `imagen_url` es null. Automatización con Google Custom Search API pendiente de credenciales (`GOOGLE_API_KEY` y `GOOGLE_CX` en `backend/.env`).
+5. **Producto "Malla mini frac x3"**: tiene imagen incorrecta en Supabase (error de dato, no de código).
+6. **Recetario**: enlazar más ingredientes con IDs reales de productos del catálogo.
+7. **Limpieza de archivos temporales**: `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`, `dist-update.zip`, `deploy-result.txt`.
 
 ## Documentación
 

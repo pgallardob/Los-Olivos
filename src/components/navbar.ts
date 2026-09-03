@@ -177,6 +177,33 @@ export function initNavbar(): void {
     });
   });
 
+  // Modal informativo al hacer clic en "Productos" (solo si no estamos ya en productos.html)
+  if (!window.location.pathname.endsWith('/productos.html')) {
+    document.querySelectorAll('a[href="/productos.html"]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (mobileMenu) mobileMenu.setAttribute('hidden', '');
+        void Swal.fire({
+          title: 'Antes de ir a Productos',
+          html: '<p style="font-size:0.9rem;line-height:1.5;text-align:left;margin:0">Recuerda que si agregas productos a tu carrito y envías el pedido, este estará disponible para su retiro en la tienda durante <strong>2 hrs</strong>.<br><br>El pago solo debes realizarlo al retirar, en <strong>efectivo</strong> o con <strong>Redcompra</strong>.<br><br>¡Gracias!</p>',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#6f8b3f',
+          background: '#161b17',
+          color: '#e4eae6',
+          showCloseButton: true,
+          customClass: {
+            popup: 'products-info-modal',
+            closeButton: 'products-info-close',
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = '/productos.html';
+          }
+        });
+      });
+    });
+  }
+
   // Auto-abrir modal si viene de "Publicar aviso" en avisos.html
   const params = new URLSearchParams(window.location.search);
   if (params.get('aviso') === '1') {

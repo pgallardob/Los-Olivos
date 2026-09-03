@@ -182,11 +182,9 @@ function renderPagination(container: HTMLElement, totalPages: number): void {
 }
 
 function scrollToRecipesTop(): void {
-  const grid = document.getElementById('recipes-grid');
-  if (!grid) return;
-  const section = grid.closest('.recipes-section');
-  if (!section) return;
-  const top = section.getBoundingClientRect().top + window.scrollY - 80;
+  const header = document.querySelector('.catalog-header');
+  if (!header) return;
+  const top = header.getBoundingClientRect().top + window.scrollY - 80;
   window.scrollTo({ top, behavior: 'smooth' });
 }
 

@@ -133,6 +133,7 @@ function renderRecipeSelect(container: HTMLElement): void {
     currentCategory = select.value;
     currentPage = 1;
     renderRecipes();
+    scrollToRecipesTop();
   });
 
   wrapper.append(label, select);
@@ -155,6 +156,7 @@ function renderPagination(container: HTMLElement, totalPages: number): void {
     if (currentPage > 1) {
       currentPage--;
       renderRecipes();
+      scrollToRecipesTop();
     }
   });
 
@@ -171,11 +173,21 @@ function renderPagination(container: HTMLElement, totalPages: number): void {
     if (currentPage < totalPages) {
       currentPage++;
       renderRecipes();
+      scrollToRecipesTop();
     }
   });
 
   nav.append(prevBtn, info, nextBtn);
   container.append(nav);
+}
+
+function scrollToRecipesTop(): void {
+  const grid = document.getElementById('recipes-grid');
+  if (!grid) return;
+  const section = grid.closest('.recipes-section');
+  if (!section) return;
+  const top = section.getBoundingClientRect().top + window.scrollY - 80;
+  window.scrollTo({ top, behavior: 'smooth' });
 }
 
 function renderRecipes(): void {

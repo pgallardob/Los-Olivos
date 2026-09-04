@@ -138,7 +138,7 @@ powershell -ExecutionPolicy Bypass -File deploy-check.ps1
 
 ### QR en footer (todas las páginas)
 
-- Imagen QR con botón "Scanear" que abre un modal ampliado
+- Imagen QR con botón "Escanear" que abre un modal ampliado
 - Presente en index, productos, avisos y recetas
 - Componente: `src/components/qr-modal.ts`
 
@@ -241,6 +241,17 @@ Las 4 páginas incluyen metadatos optimizados:
 - theme-color (#0b0e0c)
 - robots.txt y sitemap.xml en `public/`
 - Datos estructurados (BreadcrumbList en avisos)
+
+## Correcciones de ortografía
+
+Se revisaron y corrigieron todos los textos visibles al usuario en `index.html`, `recetas.html`, `productos.html` y `src/services/api.ts`:
+
+- Tildes faltantes: estratégicas, día, pública, Envíanos, metodología, ágil, Néctar
+- Errores tipográficos: exelentes → excelentes, nuetros → nuestros, perzonalizada → personalizada, Hambuerguesa → Hamburguesa
+- Palabra duplicada: "para para" → "para"
+- Mayúsculas: instagram → Instagram
+- Horario consistente en 19:00 hrs en `.env`, datos estructurados y fallback de `api.ts`
+- "Scanear" → "Escanear" en todos los botones QR
 
 ## Pendientes
 

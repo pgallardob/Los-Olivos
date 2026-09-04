@@ -65,14 +65,14 @@ const heroSlides: HeroSlide[] = [
     title: 'En Concordia 408 somos tu mejor alternativa de ahorro',
     subtitle: 'Directo del distribuidor para acercarte los mejores precios.',
     description:
-      'Diseñamos una metodologia de trabajo  agil con nuestros proveedores para para mejorar las ofertas disponibles ',
+      'Diseñamos una metodología de trabajo ágil con nuestros proveedores para mejorar las ofertas disponibles '
   },
   {
     image: heroImage(2),
     imageAlt: 'Estructura hexagonal futurista (placeholder)',
     kicker: 'Presencia // Rutas',
     title: 'Online, Web y en Redes Sociales',
-    subtitle: 'Todas nuestras plataformas dedicadas a nuetros clientes',
+    subtitle: 'Todas nuestras plataformas dedicadas a nuestros clientes',
     description:
       'Plataformas Web, Instagram, Tik Tok, Facebook y WhatsApp',
   },
@@ -83,7 +83,7 @@ const heroSlides: HeroSlide[] = [
     title: 'Crecemos juntos de forma cercana y competitiva',
     subtitle: 'Centramos nuestra atención en nuestros clientes.',
     description:
-      'Transformamos el concepto comercial en una atención perzonalizada cercana y de calidad.',
+      'Transformamos el concepto comercial en una atención personalizada cercana y de calidad.',
   },
 ];
 
@@ -94,7 +94,7 @@ const cards: CardItem[] = [
     category: '',
     title: 'Oferta LosOlivos ',
     description:
-      'Nectar Colun caja 1 Lt sabores Durazno, Naranja, Piña. 2 x $1.800. ',
+      'Néctar Colun caja 1 Lt sabores Durazno, Naranja, Piña. 2 x $1.800. ',
     ctaLabel: 'Ver más',
     icon: '',
   },
@@ -143,7 +143,7 @@ const cards: CardItem[] = [
     imageAlt: 'Oferta LosOlivos',
     category: '',
     title: 'Oferta Los Olivos',
-    description:'Hambuerguesa Super Beef 100 gr 2 x $1.000 hasta agotar stock',
+    description:'Hamburguesa Super Beef 100 gr 2 x $1.000 hasta agotar stock',
     ctaLabel: 'Ver más',
     icon: '',
   },
@@ -155,7 +155,7 @@ const company: CompanyInfo = {
   email: env.VITE_CONTACT_EMAIL ?? 'contacto@ejemplo.com',
   phone: env.VITE_CONTACT_PHONE ?? '+569 64 19 4547 - +569 30 74 8991',
   address: env.VITE_CONTACT_ADDRESS ?? 'Concordia 408 Local A, Peñaflor, Santiago, Chile',
-  hours: env.VITE_CONTACT_HOURS ?? 'Lun–Sab 10:00–20:00 hrs',
+  hours: env.VITE_CONTACT_HOURS ?? 'Lun–Sab 10:00–19:00 hrs',
   socials: [
     { name: 'Instagram', icon: 'instagram', url: env.VITE_SOCIAL_INSTAGRAM ?? '' },
     { name: 'TikTok', icon: 'tiktok', url: env.VITE_SOCIAL_TIKTOK ?? '' },

@@ -209,6 +209,31 @@
       aria-label="Catálogo de productos"
     >
 
+      <!-- Barra de búsqueda -->
+      <div class="catalog-search">
+        <input
+          type="search"
+          id="catalog-search-input"
+          class="catalog-search-input"
+          placeholder="Buscar producto por nombre…"
+          aria-label="Buscar producto por nombre"
+          autocomplete="off"
+        />
+        <button
+          type="button"
+          id="catalog-search-btn"
+          class="catalog-search-btn"
+          aria-label="Buscar producto"
+        >Buscar</button>
+      </div>
+
+      <!-- Mensaje de búsqueda -->
+      <div
+        id="catalog-search-message"
+        class="catalog-search-message"
+        aria-live="polite"
+      ></div>
+
       <!-- Filtros de categoría -->
       <div
         class="catalog-filters"

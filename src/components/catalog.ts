@@ -15,6 +15,7 @@ const ALL_CATEGORIES = 'todos';
 
 let currentCategory: CategoryId = ALL_CATEGORIES;
 let currentPage = 1;
+let searchQuery = '';
 let supabaseProducts: Product[] = [];
 let useSupabase = false;
 
@@ -25,19 +26,29 @@ let useSupabase = false;
 function getFilteredProducts(category: CategoryId): Product[] {
   const source = useSupabase && supabaseProducts.length > 0 ? supabaseProducts : PRODUCTS;
 
-  if (category === ALL_CATEGORIES) {
-    return source;
-  }
+  let filtered = source;
 
-  if (useSupabase) {
-    return source.filter(
-      (product) => product.categoria.toLowerCase() === category.toLowerCase(),
+  if (searchQuery.trim() !== '') {
+    const q = searchQuery.trim().toLowerCase();
+    filtered = filtered.filter(
+      (product) => product.nombre.toLowerCase().includes(q),
     );
+    return filtered;
   }
 
-  return source.filter(
-    (product) => product.categoria === category,
-  );
+  if (category !== ALL_CATEGORIES) {
+    if (useSupabase) {
+      filtered = filtered.filter(
+        (product) => product.categoria.toLowerCase() === category.toLowerCase(),
+      );
+    } else {
+      filtered = filtered.filter(
+        (product) => product.categoria === category,
+      );
+    }
+  }
+
+  return filtered;
 }
 
 /* ============================================================
@@ -106,6 +117,8 @@ function createFilterButton(
   button.addEventListener('click', () => {
     currentCategory = categoryId;
     currentPage = 1;
+    searchQuery = '';
+    clearSearchMessage();
 
     updateFilterActiveState();
     renderProducts();
@@ -205,6 +218,8 @@ function createProductCard(
     document.createElement('article');
 
   card.className = 'catalog-card';
+
+  card.setAttribute('data-product-id', product.id);
 
   /* ----------------------------------------------------------
      Contenedor de imagen
@@ -564,6 +579,50 @@ function scrollToGrid(): void {
 }
 
 /* ============================================================
+   HIGHLIGHT DESDE URL (recetas)
+   ============================================================ */
+
+function highlightProductFromUrl(): void {
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get('producto');
+  if (!productId) return;
+
+  const allProducts = useSupabase && supabaseProducts.length > 0 ? supabaseProducts : PRODUCTS;
+  const product = allProducts.find((p) => p.id === productId);
+  if (!product) return;
+
+  const category = product.categoria.toLowerCase();
+  const source = useSupabase ? supabaseProducts : PRODUCTS;
+  const indexInCategory = source
+    .filter((p) => useSupabase ? p.categoria.toLowerCase() === category : p.categoria === product.categoria)
+    .findIndex((p) => p.id === productId);
+
+  if (indexInCategory < 0) return;
+
+  const targetPage = Math.floor(indexInCategory / PRODUCTS_PER_PAGE) + 1;
+
+  if (currentCategory !== product.categoria && currentCategory !== category) {
+    currentCategory = useSupabase ? category : product.categoria;
+    currentPage = targetPage;
+    renderFilters(document.getElementById('catalog-filters')!);
+    renderProducts();
+    renderPagination();
+  } else if (currentPage !== targetPage) {
+    currentPage = targetPage;
+    renderProducts();
+    renderPagination();
+  }
+
+  requestAnimationFrame(() => {
+    const card = document.querySelector(`[data-product-id="${productId}"]`) as HTMLElement | null;
+    if (card) {
+      card.classList.add('catalog-card--highlight');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+}
+
+/* ============================================================
    INICIALIZACIÓN
    ============================================================ */
 
@@ -603,4 +662,90 @@ export async function initCatalog(): Promise<void> {
   renderProducts();
 
   renderPagination();
+
+  initSearchInput();
+
+  highlightProductFromUrl();
+}
+
+/* ============================================================
+   BÚSQUEDA
+   ============================================================ */
+
+function initSearchInput(): void {
+  const input = document.getElementById('catalog-search-input') as HTMLInputElement | null;
+  const btn = document.getElementById('catalog-search-btn') as HTMLButtonElement | null;
+  if (!input) return;
+
+  const doSearch = () => {
+    const term = input.value.trim();
+    if (term === '') return;
+
+    const source = useSupabase && supabaseProducts.length > 0 ? supabaseProducts : PRODUCTS;
+    const results = source.filter(
+      (product) => product.nombre.toLowerCase().includes(term.toLowerCase()),
+    );
+
+    input.value = '';
+
+    if (results.length === 0) {
+      searchQuery = '';
+      showSearchMessage(`El producto "${term}" no existe en el catálogo.`, 'not-found');
+      return;
+    }
+
+    if (currentCategory !== ALL_CATEGORIES) {
+      const resultCategoryNames = [...new Set(results.map((p) => p.categoria))];
+      const currentCatLower = currentCategory.toLowerCase();
+      const inCurrentCategory = useSupabase
+        ? resultCategoryNames.some((cn) => cn.toLowerCase() === currentCatLower)
+        : resultCategoryNames.some((cn) => cn === currentCategory);
+
+      if (!inCurrentCategory) {
+        const catList = resultCategoryNames.join('", "');
+        showSearchMessage(
+          `El producto "${term}" se encuentra en la categoría "${catList}".`,
+          'info',
+        );
+      } else {
+        clearSearchMessage();
+      }
+    } else {
+      clearSearchMessage();
+    }
+
+    searchQuery = term;
+    currentCategory = ALL_CATEGORIES;
+    currentPage = 1;
+    updateFilterActiveState();
+    renderProducts();
+    renderPagination();
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doSearch();
+    }
+  });
+
+  if (btn) {
+    btn.addEventListener('click', doSearch);
+  }
+}
+
+function showSearchMessage(text: string, type: 'info' | 'not-found'): void {
+  const msg = document.getElementById('catalog-search-message');
+  if (!msg) return;
+  msg.textContent = text;
+  msg.className = `catalog-search-message catalog-search-message--${type}`;
+  msg.style.display = 'block';
+}
+
+function clearSearchMessage(): void {
+  const msg = document.getElementById('catalog-search-message');
+  if (!msg) return;
+  msg.textContent = '';
+  msg.className = 'catalog-search-message';
+  msg.style.display = 'none';
 }

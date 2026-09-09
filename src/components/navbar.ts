@@ -169,6 +169,15 @@ export function initNavbar(): void {
     });
   });
 
+  // Scroll al top absoluto al hacer clic en "Inicio"
+  document.querySelectorAll('a[href="#inicio"]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (mobileMenu) mobileMenu.setAttribute('hidden', '');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
   // CTA "Envianos tu aviso" (navbar)
   document.querySelectorAll('[data-cta="cotizar"]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -185,11 +194,11 @@ export function initNavbar(): void {
         if (mobileMenu) mobileMenu.setAttribute('hidden', '');
         void Swal.fire({
           title: 'Antes de ir a Productos',
-          html: '<p style="font-size:0.9rem;line-height:1.5;text-align:left;margin:0">Recuerda que si agregas productos a tu carrito y envías el pedido, este estará disponible para su retiro en la tienda durante <strong>2 hrs</strong>.<br><br>El pago solo debes realizarlo al retirar, en <strong>efectivo</strong> o con <strong>Redcompra</strong>.<br><br>¡Gracias!</p>',
+          html: '<p style="font-size:0.95rem;line-height:1.6;text-align:left;margin:0;color:#ffffff">Recuerda que si agregas productos a tu carrito y envías el pedido, este estará disponible para su retiro en la tienda durante <strong style="color:#d4ff5e">2 hrs</strong>.<br><br>El pago solo debes realizarlo al retirar, en <strong style="color:#d4ff5e">efectivo</strong> o con <strong style="color:#d4ff5e">Redcompra</strong>.</p><p style="font-size:1.1rem;text-align:center;margin:1rem 0 0;color:#d4ff5e;font-weight:600">¡Gracias!</p>',
           confirmButtonText: 'Entendido',
           confirmButtonColor: '#6f8b3f',
           background: '#161b17',
-          color: '#e4eae6',
+          color: '#ffffff',
           showCloseButton: true,
           customClass: {
             popup: 'products-info-modal',
@@ -197,7 +206,7 @@ export function initNavbar(): void {
           },
         }).then((result) => {
           if (result.isConfirmed) {
-            window.location.href = '/productos.html';
+            window.location.assign('/productos.html');
           }
         });
       });

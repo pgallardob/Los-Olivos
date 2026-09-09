@@ -48,26 +48,27 @@ export async function handleChat(req, res) {
       }
     }
 
-    // 4. Si es consulta de productos o intención general, buscar localmente
+    // 4. Si es consulta de productos, buscar localmente
     let results = [];
-    if (intent.type === 'product' || intent.type === 'general') {
+    if (intent.type === 'product') {
       results = searchProducts(message, catalog.productos);
       productContext = buildContext(results, intent);
-      // Agregar contexto del negocio para preguntas generales
-      if (intent.type === 'general') {
-        const info = getBusinessInfo();
-        if (info) {
-          productContext += `\n\nContexto del negocio:\n` +
-            `Nombre: ${info.nombre}\n` +
-            `Dirección: ${info.direccion}\n` +
-            `Teléfono: ${info.telefono}\n` +
-            `WhatsApp: ${info.whatsapp}\n` +
-            `Horarios: Lunes a sábado 10:00-20:00, domingo cerrado\n` +
-            `Pedidos: ${info.pedidos || 'Por WhatsApp o en el local'}\n` +
-            `Delivery: ${info.delivery || 'Consultar por WhatsApp'}\n` +
-            `Pagos: ${info.metodos_pago || 'Efectivo y transferencia'}\n` +
-            `Redes: Instagram ${info.redes?.instagram || 'N/A'}, WhatsApp ${info.redes?.whatsapp || 'N/A'}`;
-        }
+    }
+
+    // 4a. Si es intención general (no producto ni negocio), enviar a IA con contexto del negocio
+    if (intent.type === 'general') {
+      const info = getBusinessInfo();
+      if (info) {
+        productContext = `Contexto del negocio:\n` +
+          `Nombre: ${info.nombre}\n` +
+          `Dirección: ${info.direccion}\n` +
+          `Teléfono: ${info.telefono}\n` +
+          `WhatsApp: ${info.whatsapp}\n` +
+          `Horarios: Lunes a sábado 10:00-19:00, domingo cerrado\n` +
+          `Pedidos: ${info.pedidos || 'Por WhatsApp o en el local'}\n` +
+          `Delivery: ${info.delivery || 'Consultar por WhatsApp'}\n` +
+          `Pagos: ${info.metodos_pago || 'Efectivo y transferencia'}\n` +
+          `Redes: Instagram ${info.redes?.instagram || 'N/A'}, WhatsApp ${info.redes?.whatsapp || 'N/A'}`;
       }
     }
 
@@ -130,8 +131,51 @@ function resolveBusinessQuery(key, info) {
       return info.horarios?.sabado && info.horarios.sabado !== 'Cerrado'
         ? `Sí, atendemos el sábado de ${info.horarios.sabado}.`
         : 'No atendemos los sábados.';
+    case 'open':
+      return checkOpenNow(info);
     default:
       return null;
+  }
+}
+
+function checkOpenNow(info) {
+  if (!info?.horarios) return 'No tengo información de horarios en este momento.';
+
+  const now = new Date();
+  const chileTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Santiago' }));
+  const dayNames = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+  const today = dayNames[chileTime.getDay()];
+  const todayHours = info.horarios[today];
+
+  if (!todayHours || todayHours === 'Cerrado') {
+    return 'Estamos cerrados el día de hoy. Nuestro horario es de lunes a sábado de 10:00 a 19:00 hrs.';
+  }
+
+  const match = todayHours.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if (!match) {
+    return `Nuestro horario de hoy es: ${todayHours}.`;
+  }
+
+  const openHour = parseInt(match[1], 10);
+  const openMin = parseInt(match[2], 10);
+  const closeHour = parseInt(match[3], 10);
+  const closeMin = parseInt(match[4], 10);
+  const currentHour = chileTime.getHours();
+  const currentMin = chileTime.getMinutes();
+  const currentTotal = currentHour * 60 + currentMin;
+  const openTotal = openHour * 60 + openMin;
+  const closeTotal = closeHour * 60 + closeMin;
+
+  if (currentTotal >= openTotal && currentTotal < closeTotal) {
+    const remaining = closeTotal - currentTotal;
+    const remainingHr = Math.floor(remaining / 60);
+    const remainingMin = remaining % 60;
+    const remainingStr = remainingHr > 0 ? `${remainingHr} hr${remainingHr > 1 ? 's' : ''} y ${remainingMin} min` : `${remainingMin} min`;
+    return `¡Sí, estamos abiertos! Cerramos a las ${match[3]}:${match[4]} hrs (queda aproximadamente ${remainingStr}). Te esperamos en ${info.direccion}.`;
+  } else if (currentTotal < openTotal) {
+    return `Todavía no abrimos. Abrimos a las ${match[1]}:${match[2]} hrs. Te esperamos en ${info.direccion}.`;
+  } else {
+    return 'Ya cerramos el día de hoy. Nuestro horario es de lunes a sábado de 10:00 a 19:00 hrs. ¡Te esperamos mañana!';
   }
 }
 
@@ -186,7 +230,7 @@ function getFallbackResponse(productContext = '') {
   const parts = [];
   parts.push('En este momento tengo problemas para procesar tu consulta, pero puedo ayudarte con lo siguiente:');
   parts.push(`📍 Dirección: ${info.direccion}`);
-  parts.push(`🕐 Horario: Lunes a sábado de 10:00 a 20:00, domingo cerrado.`);
+  parts.push(`🕐 Horario: Lunes a sábado de 10:00 a 19:00, domingo cerrado.`);
   parts.push(`📞 Teléfono: ${info.telefono}`);
   parts.push(`💬 WhatsApp: ${info.whatsapp}`);
   if (info.pedidos) parts.push(`🛒 Pedidos: ${info.pedidos}`);

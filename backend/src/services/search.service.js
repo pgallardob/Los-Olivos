@@ -15,6 +15,21 @@ const INTENT_PATTERNS = {
     /ruta/,
     /mapa/,
   ],
+  business_open: [
+    /esta\s+abierto/,
+    /estan\s+abiertos/,
+    /esta\s+cerrado/,
+    /estan\s+cerrados/,
+    /puedo\s+ir\s+ahora/,
+    /puedo\s+venir\s+ahora/,
+    /puedo\s+comprar\s+ahora/,
+    /si\s+voy\s+ahora/,
+    /si\s+llego\s+ahora/,
+    /estaran\s+abiertos/,
+    /estara\s+abierto/,
+    /estaran\s+cerrados/,
+    /estara\s+cerrado/,
+  ],
   business_hours: [
     /horario/,
     /atienden/,
@@ -23,6 +38,20 @@ const INTENT_PATTERNS = {
     /que\s+hora/,
     /a\s+que\s+hora/,
     /cuando\s+(abren|cierran|atienden)/,
+    /abierto/,
+    /abierta/,
+    /cerrado/,
+    /cerrada/,
+    /abren\s+hoy/,
+    /cierran\s+hoy/,
+    /siguen\s+abriendo/,
+    /siguen\s+abiertos/,
+    /todavia\s+(abren|estan\s+abiertos)/,
+    /ya\s+abrieron/,
+    /ya\s+cerraron/,
+    /que\s+dias\s+abren/,
+    /que\s+dias\s+atienden/,
+    /fin\s+de\s+semana/,
   ],
   business_phone: [
     /telefono/,
@@ -155,6 +184,9 @@ export function detectIntent(message) {
         if (key.startsWith('business_saturday')) {
           return { type: 'business', key: 'saturday' };
         }
+        if (key.startsWith('business_open')) {
+          return { type: 'business', key: 'open' };
+        }
         if (key.startsWith('business_address')) {
           return { type: 'business', key: 'address' };
         }
@@ -216,6 +248,13 @@ export function searchProducts(message, productos) {
     'hola', 'buenas', 'tardes', 'dias', 'noches', 'quiero', 'saber', 'necesito',
     'al', 'productos', 'producto', 'que', 'categoria', 'marca', 'alguno', 'alguna',
     'algunos', 'algunas', 'ver', 'lista', 'catalogo',
+    'esta', 'este', 'esto', 'es', 'son', 'si', 'no', 'o', 'y', 'a', 'en',
+    'con', 'sin', 'para', 'mi', 'me', 'te', 'se', 'lo', 'les', 'su', 'sus',
+    'muy', 'mas', 'menos', 'solo', 'tambien', 'como', 'cuando', 'donde', 'quien',
+    'puedo', 'puede', 'pueden', 'hacer', 'hoy', 'ahora', 'despues', 'antes',
+    'abierto', 'abierta', 'abiertos', 'abiertas', 'cerrado', 'cerrada', 'cerrados', 'cerradas',
+    'abren', 'cierran', 'atienden', 'horario', 'horarios',
+    'buen', 'buena', 'buenos', 'buenas', 'gracias', 'nada', 'todo', 'todas',
   ];
 
   const words = normalizeQuery(message)

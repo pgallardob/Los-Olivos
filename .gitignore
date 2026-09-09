@@ -15,3 +15,4 @@ dist-update-*.zip
 deploy-result.txt
 ftp-test-result.txt
 test-ftp.ps1
+scripts/auto-images.log

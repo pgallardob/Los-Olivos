@@ -170,11 +170,15 @@ export function initNavbar(): void {
   });
 
   // Scroll al top absoluto al hacer clic en "Inicio"
-  document.querySelectorAll('a[href="#inicio"]').forEach((link) => {
+  document.querySelectorAll('a[href="#inicio"], a[href="/index.html#inicio"], a[href="/#inicio"]').forEach((link) => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       if (mobileMenu) mobileMenu.setAttribute('hidden', '');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.location.pathname.endsWith('/index.html') || window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.location.assign('/index.html');
+      }
     });
   });
 

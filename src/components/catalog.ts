@@ -29,9 +29,11 @@ function getFilteredProducts(category: CategoryId): Product[] {
   let filtered = source;
 
   if (searchQuery.trim() !== '') {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('\\b' + escaped + '\\b', 'i');
     filtered = filtered.filter(
-      (product) => product.nombre.toLowerCase().includes(q),
+      (product) => regex.test(product.nombre),
     );
     return filtered;
   }
@@ -675,7 +677,15 @@ export async function initCatalog(): Promise<void> {
 function initSearchInput(): void {
   const input = document.getElementById('catalog-search-input') as HTMLInputElement | null;
   const btn = document.getElementById('catalog-search-btn') as HTMLButtonElement | null;
+  const suggestionsEl = document.getElementById('catalog-search-suggestions') as HTMLDivElement | null;
   if (!input) return;
+
+  const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const matchesSearch = (productName: string, term: string): boolean => {
+    const regex = new RegExp('\\b' + escapeRegex(term.toLowerCase()) + '\\b', 'i');
+    return regex.test(productName);
+  };
 
   const doSearch = () => {
     const term = input.value.trim();
@@ -683,10 +693,11 @@ function initSearchInput(): void {
 
     const source = useSupabase && supabaseProducts.length > 0 ? supabaseProducts : PRODUCTS;
     const results = source.filter(
-      (product) => product.nombre.toLowerCase().includes(term.toLowerCase()),
+      (product) => matchesSearch(product.nombre, term),
     );
 
     input.value = '';
+    hideSuggestions();
 
     if (results.length === 0) {
       searchQuery = '';
@@ -722,15 +733,70 @@ function initSearchInput(): void {
     renderPagination();
   };
 
+  const showSuggestions = (term: string) => {
+    if (!suggestionsEl || term.length < 2) {
+      hideSuggestions();
+      return;
+    }
+
+    const source = useSupabase && supabaseProducts.length > 0 ? supabaseProducts : PRODUCTS;
+    const matches = source
+      .filter((product) => matchesSearch(product.nombre, term))
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      hideSuggestions();
+      return;
+    }
+
+    suggestionsEl.innerHTML = '';
+    matches.forEach((product) => {
+      const item = document.createElement('div');
+      item.className = 'catalog-search-suggestion-item';
+      item.setAttribute('role', 'option');
+      item.textContent = product.nombre;
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = product.nombre;
+        hideSuggestions();
+        doSearch();
+      });
+      suggestionsEl.appendChild(item);
+    });
+    suggestionsEl.style.display = 'block';
+  };
+
+  const hideSuggestions = () => {
+    if (!suggestionsEl) return;
+    suggestionsEl.innerHTML = '';
+    suggestionsEl.style.display = 'none';
+  };
+
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      hideSuggestions();
       doSearch();
+    }
+    if (e.key === 'Escape') {
+      hideSuggestions();
     }
   });
 
+  input.addEventListener('input', () => {
+    const term = input.value.trim();
+    showSuggestions(term);
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(hideSuggestions, 150);
+  });
+
   if (btn) {
-    btn.addEventListener('click', doSearch);
+    btn.addEventListener('click', () => {
+      hideSuggestions();
+      doSearch();
+    });
   }
 }
 

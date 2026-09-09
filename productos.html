@@ -211,14 +211,21 @@
 
       <!-- Barra de búsqueda -->
       <div class="catalog-search">
-        <input
-          type="search"
-          id="catalog-search-input"
-          class="catalog-search-input"
-          placeholder="Buscar producto por nombre…"
-          aria-label="Buscar producto por nombre"
-          autocomplete="off"
-        />
+        <div class="catalog-search-wrapper">
+          <input
+            type="search"
+            id="catalog-search-input"
+            class="catalog-search-input"
+            placeholder="Buscar producto por nombre…"
+            aria-label="Buscar producto por nombre"
+            autocomplete="off"
+          />
+          <div
+            id="catalog-search-suggestions"
+            class="catalog-search-suggestions"
+            role="listbox"
+          ></div>
+        </div>
         <button
           type="button"
           id="catalog-search-btn"

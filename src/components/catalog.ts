@@ -31,7 +31,7 @@ function getFilteredProducts(category: CategoryId): Product[] {
   if (searchQuery.trim() !== '') {
     const q = searchQuery.trim();
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp('\\b' + escaped + '\\b', 'i');
+    const regex = new RegExp('\\b' + escaped, 'i');
     filtered = filtered.filter(
       (product) => regex.test(product.nombre),
     );
@@ -683,7 +683,8 @@ function initSearchInput(): void {
   const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   const matchesSearch = (productName: string, term: string): boolean => {
-    const regex = new RegExp('\\b' + escapeRegex(term.toLowerCase()) + '\\b', 'i');
+    const escaped = escapeRegex(term.toLowerCase());
+    const regex = new RegExp('\\b' + escaped, 'i');
     return regex.test(productName);
   };
 

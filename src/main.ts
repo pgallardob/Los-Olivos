@@ -47,23 +47,10 @@ async function bootstrap(): Promise<void> {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-  }
-
   // Eliminar hash #inicio de la URL si existe (evita scroll automatico del navegador)
   if (window.location.hash === '#inicio') {
     history.replaceState(null, '', window.location.pathname + window.location.search);
   }
-
-  // Scroll al top inmediatamente
-  window.scrollTo(0, 0);
-
-  // Scroll al top despues de que el navegador procese cualquier hash residual
-  requestAnimationFrame(() => {
-    window.scrollTo(0, 0);
-  });
-  setTimeout(() => window.scrollTo(0, 0), 0);
 
   void bootstrap().then(() => {
     // Scroll al top despues de que bootstrap complete (hero, cards, etc.)

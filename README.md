@@ -24,7 +24,7 @@ ligeras. Sin frameworks pesados.
 ## Reglas de arquitectura
 
 - Sin React / Vue / Angular / Tailwind.
-- Sin `style=""` (CSS inline), sin JavaScript inline, sin CSS dentro del HTML.
+- Sin `style=""` (CSS inline), sin CSS dentro del HTML. Excepción mínima: script inline de 2 líneas en `<head>` para `scrollRestoration` (debe ejecutarse antes que cualquier otro JS).
 - Estructura, presentación y lógica completamente separadas.
 - Módulos TypeScript independientes con responsabilidad única.
 - CSS mínimo: Pico CSS cubre la base; `src/styles/theme.css` solo aporta la identidad visual.
@@ -136,6 +136,13 @@ powershell -ExecutionPolicy Bypass -File deploy-check.ps1
 - Scroll automático al título al cambiar de página o categoría
 - Componentes: `src/components/recipes.ts`, `src/data/recipes.ts`
 
+### Scroll al recargar página (todas las páginas)
+
+- Script inline en `<head>`: `history.scrollRestoration = 'manual'` se ejecuta antes que el navegador restaure scroll
+- Listener `pageshow` hace `scrollTo(0, 0)` después de que el navegador termina la restauración
+- `main.ts` elimina hash `#inicio` de la URL y hace scroll al top tras `bootstrap()`
+- Navbar intercepta clicks en "Inicio" desde cualquier página (`#inicio`, `/index.html#inicio`, `/#inicio`)
+
 ### QR en footer (todas las páginas)
 
 - Imagen QR con botón "Escanear" que abre un modal ampliado
@@ -146,6 +153,8 @@ powershell -ExecutionPolicy Bypass -File deploy-check.ps1
 
 - Productos cargados desde Supabase (fallback a datos estáticos)
 - Filtros por categoría, paginación
+- **Buscador con autocompletado**: dropdown de sugerencias al escribir (mínimo 2 caracteres)
+- **Búsqueda por prefijo de palabra**: escribir "vien" encuentra "vienesas"; "pan" encuentra "pan de molde" pero no "rupanco" (usa `\b` boundary inicial, no final)
 - Imagen del producto o placeholder `sinimg.jpeg`
 - Botón "+ Agregar" alineado al fondo de cada card
 - Modal informativo al ingresar desde navbar: retiro en tienda 2 hrs, pago en efectivo o Redcompra
@@ -266,7 +275,6 @@ Se revisaron y corrigieron todos los textos visibles al usuario en `index.html`,
 4. **Productos sin imagen en Supabase**: el sistema muestra placeholder `sinimg.jpeg` cuando `imagen_url` es null. Automatización con Google Custom Search API pendiente de credenciales (`GOOGLE_API_KEY` y `GOOGLE_CX` en `backend/.env`).
 5. **Producto "Malla mini frac x3"**: tiene imagen incorrecta en Supabase (error de dato, no de código).
 6. **Recetario**: enlazar más ingredientes con IDs reales de productos del catálogo.
-7. **Limpieza de archivos temporales**: `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`, `dist-update.zip`, `deploy-result.txt`.
 
 ## Documentación
 

@@ -24,7 +24,7 @@ function showQuoteDialog(): void {
       </label>
       <label>
         Imagen (opcional, máx. 5MB)
-        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" />
+        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" style="max-width:100%;font-size:0.8rem;" />
       </label>
       <div class="quote-form-actions">
         <button type="submit" class="quote-form-submit">Enviar</button>
@@ -220,6 +220,9 @@ export function initNavbar(): void {
   // Auto-abrir modal si viene de "Publicar aviso" en avisos.html
   const params = new URLSearchParams(window.location.search);
   if (params.get('aviso') === '1') {
+    // Limpiar la URL para que no se reabra al refrescar
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
     showQuoteDialog();
   }
 }

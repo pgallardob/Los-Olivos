@@ -342,9 +342,10 @@ sl-button.navbar-cta::part(base) {
   text-align: left;
 }
 
-/* Email y Aviso ocupan todo el ancho */
+/* Email, Aviso e Imagen ocupan todo el ancho */
 .quote-form label:nth-child(3),
 .quote-form label:nth-child(4),
+.quote-form label:nth-child(5),
 .quote-form > div {
   grid-column: 1 / -1;
 }

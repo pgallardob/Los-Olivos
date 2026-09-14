@@ -126,7 +126,7 @@ export async function initFooter(): Promise<void> {
   contactList?.append(
     addressItem(company.address),
     phoneItem(company.phone),
-    contactItem(Mail, company.email, `mailto:${company.email}`),
+    contactItem(Mail, company.email, '/avisos.html'),
   );
 
   function renderSocials(

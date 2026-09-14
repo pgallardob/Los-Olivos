@@ -207,35 +207,60 @@ function openContactModal(): void {
     html: `
       <style>
         .swal2-popup { border-radius: 12px; }
-        .swal2-title { font-size: 1.4rem; margin-bottom: 1rem; }
+        .swal2-title { font-size: 1.3rem; margin-bottom: 0.8rem; }
+        .contact-field { max-width: 320px; margin: 0 auto 0.6rem; text-align: left; }
+        .contact-label { display: block; font-size: 0.78rem; color: #a7b1ac; margin-bottom: 0.2rem; padding-left: 0.2rem; }
         #swal-name, #swal-phone, #swal-email, #swal-message {
           width: 100%;
-          max-width: 320px;
-          margin: 0.5rem auto;
-          display: block;
           background: #1a201a;
           border: 1px solid #3a4a2a;
           border-radius: 8px;
           color: #e4eae6;
-          padding: 0.6rem 0.8rem;
-          font-size: 0.9rem;
+          padding: 0.5rem 0.7rem;
+          font-size: 0.88rem;
           box-shadow: none;
+          margin: 0;
         }
         #swal-name:focus, #swal-phone:focus, #swal-email:focus, #swal-message:focus {
           border-color: #6f8b3f;
           box-shadow: 0 0 0 2px rgba(111,139,63,0.2);
         }
-        #swal-message { min-height: 80px; resize: vertical; }
+        #swal-message { min-height: 70px; resize: vertical; }
         .swal2-input::placeholder, .swal2-textarea::placeholder { color: #7a8a6a; }
-        .swal2-validation-message { background: #2a1a1a; color: #e4eae6; border-radius: 6px; }
+        .swal2-validation-message { background: #2a1a1a; color: #e4eae6; border-radius: 6px; font-size: 0.8rem; }
+        .contact-phone-wrap { display: flex; gap: 0.4rem; }
+        .contact-phone-prefix {
+          display: flex; align-items: center;
+          background: #1a201a; border: 1px solid #3a4a2a; border-radius: 8px;
+          padding: 0.5rem 0.5rem; font-size: 0.88rem; color: #7a8a6a; white-space: nowrap;
+        }
+        .swal2-actions { margin-top: 0.5rem; }
+        .swal2-confirm, .swal2-cancel {
+          padding: 0.4rem 1.2rem !important;
+          font-size: 0.85rem !important;
+          border-radius: 8px !important;
+          font-weight: 600 !important;
+        }
       </style>
-      <input id="swal-name" class="swal2-input" placeholder="Nombre *" maxlength="80">
-      <div style="display:flex;max-width:320px;margin:0.5rem auto;gap:0.4rem;">
-        <span style="display:flex;align-items:center;background:#1a201a;border:1px solid #3a4a2a;border-radius:8px;padding:0.6rem 0.5rem;font-size:0.9rem;color:#7a8a6a;white-space:nowrap;">+56</span>
-        <input id="swal-phone" class="swal2-input" placeholder="9 1234 5678" maxlength="10" style="flex:1;margin:0;">
+      <div class="contact-field">
+        <label class="contact-label" for="swal-name">Nombre *</label>
+        <input id="swal-name" class="swal2-input" placeholder="Tu nombre" maxlength="80">
       </div>
-      <input id="swal-email" class="swal2-input" type="email" placeholder="Email *" maxlength="120">
-      <textarea id="swal-message" class="swal2-textarea" placeholder="Mensaje *" maxlength="500" rows="4"></textarea>
+      <div class="contact-field">
+        <label class="contact-label" for="swal-phone">Teléfono</label>
+        <div class="contact-phone-wrap">
+          <span class="contact-phone-prefix">+56</span>
+          <input id="swal-phone" class="swal2-input" placeholder="9 1234 5678" maxlength="10" style="flex:1;">
+        </div>
+      </div>
+      <div class="contact-field">
+        <label class="contact-label" for="swal-email">Email *</label>
+        <input id="swal-email" class="swal2-input" type="email" placeholder="tu@email.com" maxlength="120">
+      </div>
+      <div class="contact-field">
+        <label class="contact-label" for="swal-message">Mensaje *</label>
+        <textarea id="swal-message" class="swal2-textarea" placeholder="Escribe tu mensaje" maxlength="500" rows="4"></textarea>
+      </div>
     `,
     showCancelButton: true,
     confirmButtonText: 'Enviar',
@@ -243,7 +268,7 @@ function openContactModal(): void {
     background: '#161b17',
     color: '#e4eae6',
     confirmButtonColor: '#6f8b3f',
-    cancelButtonColor: '#555',
+    cancelButtonColor: '#3a4a2a',
     width: '26rem',
     preConfirm: async () => {
       const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim();

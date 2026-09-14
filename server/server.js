@@ -72,8 +72,22 @@ app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (_req, res) => {
+  const results = {};
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('avisos').select('id').limit(1);
+      results.avisos = error ? 'ERROR' : 'OK';
+    } catch { results.avisos = 'ERROR'; }
+  }
+  if (reactionsDb) {
+    try {
+      const { error } = await reactionsDb.from('aviso_reactions').select('aviso_id').limit(1);
+      results.reacciones = error ? 'ERROR' : 'OK';
+    } catch { results.reacciones = 'ERROR'; }
+  }
+  console.log(`[health] Supabase keepalive: ${JSON.stringify(results)}`);
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), supabase: results });
 });
 
 app.get('/api/avisos', async (_req, res) => {
@@ -517,54 +531,8 @@ app.use((err, _req, res, _next) => {
   return res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-// ─── Keep-alive: ping mutuo cada 5 minutos para evitar sleep en Render ───
-const KEEP_ALIVE_URL = process.env.KEEP_ALIVE_URL || 'https://los-olivos-chatbot.onrender.com/api/health';
-const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutos
-
-function startKeepAlive() {
-  setInterval(async () => {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(KEEP_ALIVE_URL, { signal: controller.signal });
-      clearTimeout(timeout);
-      console.log(`[keep-alive] Ping a ${KEEP_ALIVE_URL}: ${res.status}`);
-    } catch (err) {
-      console.warn(`[keep-alive] Ping falló: ${err.message}`);
-    }
-  }, KEEP_ALIVE_INTERVAL);
-  console.log(`[keep-alive] Activo: ping cada 5 min a ${KEEP_ALIVE_URL}`);
-}
-
-// ─── Keep-alive Supabase: consulta trivial cada 6h para evitar pausa por inactividad ───
-const SUPABASE_KEEPALIVE_INTERVAL = 6 * 60 * 60 * 1000; // 6 horas
-
-function startSupabaseKeepAlive() {
-  setInterval(async () => {
-    const tasks = [];
-    if (supabase) {
-      tasks.push(
-        supabase.from('avisos').select('id').limit(1)
-          .then(({ error }) => console.log(`[supabase-keepalive] avisos: ${error ? 'ERROR ' + error.message : 'OK'}`))
-          .catch((err) => console.warn(`[supabase-keepalive] avisos falló: ${err.message}`))
-      );
-    }
-    if (reactionsDb) {
-      tasks.push(
-        reactionsDb.from('aviso_reactions').select('aviso_id').limit(1)
-          .then(({ error }) => console.log(`[supabase-keepalive] reacciones: ${error ? 'ERROR ' + error.message : 'OK'}`))
-          .catch((err) => console.warn(`[supabase-keepalive] reacciones falló: ${err.message}`))
-      );
-    }
-    await Promise.all(tasks);
-  }, SUPABASE_KEEPALIVE_INTERVAL);
-  console.log(`[supabase-keepalive] Activo: consulta cada 6h (avisos: ${!!supabase}, reacciones: ${!!reactionsDb})`);
-}
-
 app.listen(PORT, () => {
   console.log(`Backend corriendo en http://localhost:${PORT}`);
   console.log(`Supabase (avisos): ${supabase ? 'conectado' : 'no configurado'}`);
   console.log(`Supabase (reacciones): ${reactionsDb ? 'conectado' : 'no configurado'}`);
-  startKeepAlive();
-  startSupabaseKeepAlive();
 });

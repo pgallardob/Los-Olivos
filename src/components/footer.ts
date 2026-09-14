@@ -230,7 +230,10 @@ function openContactModal(): void {
         .swal2-validation-message { background: #2a1a1a; color: #e4eae6; border-radius: 6px; }
       </style>
       <input id="swal-name" class="swal2-input" placeholder="Nombre *" maxlength="80">
-      <input id="swal-phone" class="swal2-input" placeholder="Teléfono" maxlength="20">
+      <div style="display:flex;max-width:320px;margin:0.5rem auto;gap:0.4rem;">
+        <span style="display:flex;align-items:center;background:#1a201a;border:1px solid #3a4a2a;border-radius:8px;padding:0.6rem 0.5rem;font-size:0.9rem;color:#7a8a6a;white-space:nowrap;">+56</span>
+        <input id="swal-phone" class="swal2-input" placeholder="9 1234 5678" maxlength="10" style="flex:1;margin:0;">
+      </div>
       <input id="swal-email" class="swal2-input" type="email" placeholder="Email *" maxlength="120">
       <textarea id="swal-message" class="swal2-textarea" placeholder="Mensaje *" maxlength="500" rows="4"></textarea>
     `,
@@ -253,11 +256,25 @@ function openContactModal(): void {
         return false;
       }
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        Swal.showValidationMessage('El email no es válido');
+        return false;
+      }
+
+      if (phone) {
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 9 || phoneDigits.length > 10) {
+          Swal.showValidationMessage('El teléfono debe tener 9 dígitos (ej: 9 1234 5678)');
+          return false;
+        }
+      }
+
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone, email, message }),
+          body: JSON.stringify({ name, phone: phone ? `+56 ${phone}` : '', email, message }),
         });
         const data = await res.json();
         if (!res.ok) {

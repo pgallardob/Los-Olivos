@@ -29,7 +29,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '45 min',
     categoria: 'Almuerzo',
     ingredientes: [
-      { nombre: 'Carne picada', cantidad: '500 g' },
+      { nombre: 'Carne Molida Rupanco 250gr', cantidad: '500 g', productId: '0a8f8d17-7746-4b5e-927a-56ca546f928e' },
       { nombre: 'Papa', cantidad: '4 unidades' },
       { nombre: 'Zapallo', cantidad: '½ kg' },
       { nombre: 'Cebolla', cantidad: '1 unidad' },
@@ -148,8 +148,8 @@ export const RECIPES: Recipe[] = [
     ingredientes: [
       { nombre: 'Pan Hot Dog Marcelo 10 uni', cantidad: '4 unidades', productId: '2fa1a4c8-5831-404f-a164-4688ddf1a7c7' },
       { nombre: 'Salchicha de Pollo Montina 5 unid', cantidad: '4 unidades', productId: 'cf0c373e-5201-4c26-a26f-62f83f8d74fe' },
-      { nombre: 'Palta', cantidad: '½ unidad' },
-      { nombre: 'Tomate', cantidad: '1 unidad' },
+      { nombre: 'Palta Hass Granel', cantidad: '½ unidad', productId: '2791acae-e92d-441c-b4f5-4a6f4bb802df' },
+      { nombre: 'Tomate Granel KG', cantidad: '1 unidad', productId: 'f46faa79-a928-4b8f-82e5-098ffe755a2c' },
       { nombre: 'Salsa de Tomate Pomarola 200gr', cantidad: 'a gusto', productId: 'd23d40da-39af-42db-9e50-3dc2249271f1' },
     ],
     pasos: [
@@ -262,7 +262,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '45 min',
     categoria: 'Almuerzo',
     ingredientes: [
-      { nombre: 'Carne picada', cantidad: '300 g' },
+      { nombre: 'Carne Molida Rupanco 250gr', cantidad: '300 g', productId: '0a8f8d17-7746-4b5e-927a-56ca546f928e' },
       { nombre: 'Papa', cantidad: '3 unidades' },
       { nombre: 'Zanahoria', cantidad: '2 unidades' },
       { nombre: 'Choclo Minuto Verde 200gr', cantidad: '1 unidad', productId: 'd8ecd904-f994-4f9a-a723-379a00978d4f' },
@@ -311,7 +311,7 @@ export const RECIPES: Recipe[] = [
     categoria: 'Almuerzo',
     ingredientes: [
       { nombre: 'Masa de empanada', cantidad: '6 discos' },
-      { nombre: 'Carne picada', cantidad: '400 g' },
+      { nombre: 'Carne Molida Rupanco 250gr', cantidad: '400 g', productId: '0a8f8d17-7746-4b5e-927a-56ca546f928e' },
       { nombre: 'Cebolla', cantidad: '2 unidades' },
       { nombre: 'Huevos Primera', cantidad: '3 unidades', productId: 'ce5aa8a5-13d1-4458-839c-0e97902605c3' },
       { nombre: 'Pasas', cantidad: '50 g' },
@@ -357,7 +357,7 @@ export const RECIPES: Recipe[] = [
     ingredientes: [
       { nombre: 'Pan Molde Blanco Marcelo 500gr', cantidad: '4 rebanadas', productId: 'dd765dda-3775-4f07-8fd3-e6be791abcd1' },
       { nombre: 'Mantequilla Soprole 125gr', cantidad: '2 cucharadas', productId: 'be8b8e38-ac94-4de4-9579-39f7eec6b6b6' },
-      { nombre: 'Mermelada', cantidad: 'a gusto' },
+      { nombre: 'Mermelada Durazno Watts 225gr', cantidad: 'a gusto', productId: '7ecd1cef-bbc6-40de-a4f5-9d24736395ce' },
     ],
     pasos: [
       'Tostar las rebanadas de pan en tostadora o sartén.',
@@ -375,7 +375,7 @@ export const RECIPES: Recipe[] = [
     categoria: 'Desayuno',
     ingredientes: [
       { nombre: 'Huevos Primera', cantidad: '4 unidades', productId: 'ce5aa8a5-13d1-4458-839c-0e97902605c3' },
-      { nombre: 'Jamón', cantidad: '100 g' },
+      { nombre: 'Jamón Pierna Sandwich Receta del Abuelo 1kg', cantidad: '100 g', productId: '6b3e1fb2-972c-4779-b10a-d7168dac46b7' },
       { nombre: 'Aceite Natura Maravilla 900ml', cantidad: '1 cucharada', productId: 'bff45cec-5f20-4d88-b465-9eeaf787adb7' },
       { nombre: 'Sal Lobos 1kg', cantidad: 'a gusto', productId: 'ec37840e-5e1c-42e7-b7d3-a928a04261d2' },
       { nombre: 'Pan Molde Blanco Marcelo 500gr', cantidad: '2 rebanadas', productId: 'dd765dda-3775-4f07-8fd3-e6be791abcd1' },
@@ -396,7 +396,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '20 min',
     categoria: 'Desayuno',
     ingredientes: [
-      { nombre: 'Harina', cantidad: '1 taza' },
+      { nombre: 'Harina Montblanc 1kg sin polvo', cantidad: '1 taza', productId: 'b49c886f-37f1-4d47-98f3-25d49794b8e7' },
       { nombre: 'Leche Entera Pitrufquen 1lt', cantidad: '1 taza', productId: 'e9ba4e5b-9138-48db-a386-f042459229b4' },
       { nombre: 'Huevos Primera', cantidad: '2 unidades', productId: 'ce5aa8a5-13d1-4458-839c-0e97902605c3' },
       { nombre: 'Azúcar Iansa 900gr', cantidad: '2 cucharadas', productId: '0ac810c7-185d-42a6-878f-c5c6fe2544b4' },
@@ -418,7 +418,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '5 min',
     categoria: 'Desayuno',
     ingredientes: [
-      { nombre: 'Yogur natural', cantidad: '2 tazas' },
+      { nombre: 'Yogurt Soprole Yoghito Vainilla 120gr', cantidad: '2 tazas', productId: '5f5c420c-530d-4ed6-ab4c-90fe458470ad' },
       { nombre: 'Granola', cantidad: '½ taza' },
       { nombre: 'Azúcar Iansa 900gr', cantidad: '1 cucharada', productId: '0ac810c7-185d-42a6-878f-c5c6fe2544b4' },
       { nombre: 'Fruta fresca', cantidad: 'a gusto' },
@@ -459,7 +459,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '60 min',
     categoria: 'Desayuno',
     ingredientes: [
-      { nombre: 'Harina', cantidad: '1 kg' },
+      { nombre: 'Harina Montblanc 1kg sin polvo', cantidad: '1 kg', productId: 'b49c886f-37f1-4d47-98f3-25d49794b8e7' },
       { nombre: 'Leche Entera Pitrufquen 1lt', cantidad: '½ litro', productId: 'e9ba4e5b-9138-48db-a386-f042459229b4' },
       { nombre: 'Sal Lobos 1kg', cantidad: '1 cucharada', productId: 'ec37840e-5e1c-42e7-b7d3-a928a04261d2' },
       { nombre: 'Mantequilla Soprole 125gr', cantidad: '50 g', productId: 'be8b8e38-ac94-4de4-9579-39f7eec6b6b6' },
@@ -481,7 +481,7 @@ export const RECIPES: Recipe[] = [
     categoria: 'Once/Cena',
     ingredientes: [
       { nombre: 'Pan Molde Blanco Marcelo 500gr', cantidad: '4 rebanadas', productId: 'dd765dda-3775-4f07-8fd3-e6be791abcd1' },
-      { nombre: 'Jamón', cantidad: '4 rebanadas' },
+      { nombre: 'Jamón Pierna Sandwich Receta del Abuelo 1kg', cantidad: '4 rebanadas', productId: '6b3e1fb2-972c-4779-b10a-d7168dac46b7' },
       { nombre: 'Queso Gauda Soprole 1kg', cantidad: '4 rebanadas', productId: '8030c739-4690-4489-8299-6d7e4b89e130' },
       { nombre: 'Mantequilla Soprole 125gr', cantidad: '1 cucharada', productId: 'be8b8e38-ac94-4de4-9579-39f7eec6b6b6' },
     ],
@@ -500,7 +500,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '40 min',
     categoria: 'Once/Cena',
     ingredientes: [
-      { nombre: 'Harina', cantidad: '500 g' },
+      { nombre: 'Harina Montblanc 1kg sin polvo', cantidad: '500 g', productId: 'b49c886f-37f1-4d47-98f3-25d49794b8e7' },
       { nombre: 'Huevos Primera', cantidad: '3 unidades', productId: 'ce5aa8a5-13d1-4458-839c-0e97902605c3' },
       { nombre: 'Leche Entera Pitrufquen 1lt', cantidad: '½ taza', productId: 'e9ba4e5b-9138-48db-a386-f042459229b4' },
       { nombre: 'Azúcar Iansa 900gr', cantidad: '100 g', productId: '0ac810c7-185d-42a6-878f-c5c6fe2544b4' },
@@ -522,7 +522,7 @@ export const RECIPES: Recipe[] = [
     tiempo: '30 min',
     categoria: 'Once/Cena',
     ingredientes: [
-      { nombre: 'Harina', cantidad: '500 g' },
+      { nombre: 'Harina Montblanc 1kg sin polvo', cantidad: '500 g', productId: 'b49c886f-37f1-4d47-98f3-25d49794b8e7' },
       { nombre: 'Zapallo', cantidad: '200 g' },
       { nombre: 'Aceite Natura Maravilla 900ml', cantidad: 'para freír', productId: 'bff45cec-5f20-4d88-b465-9eeaf787adb7' },
       { nombre: 'Sal Lobos 1kg', cantidad: '1 pizca', productId: 'ec37840e-5e1c-42e7-b7d3-a928a04261d2' },
@@ -546,7 +546,7 @@ export const RECIPES: Recipe[] = [
       { nombre: 'Masa de pizza', cantidad: '1 unidad' },
       { nombre: 'Salsa de Tomate Pomarola 200gr', cantidad: '½ taza', productId: 'd23d40da-39af-42db-9e50-3dc2249271f1' },
       { nombre: 'Queso Gauda Soprole 1kg', cantidad: '200 g', productId: '8030c739-4690-4489-8299-6d7e4b89e130' },
-      { nombre: 'Jamón', cantidad: '100 g' },
+      { nombre: 'Jamón Pierna Sandwich Receta del Abuelo 1kg', cantidad: '100 g', productId: '6b3e1fb2-972c-4779-b10a-d7168dac46b7' },
       { nombre: 'Orégano', cantidad: 'a gusto' },
     ],
     pasos: [
@@ -566,9 +566,9 @@ export const RECIPES: Recipe[] = [
     categoria: 'Once/Cena',
     ingredientes: [
       { nombre: 'Pan Molde Blanco Marcelo 500gr', cantidad: '4 rebanadas', productId: 'dd765dda-3775-4f07-8fd3-e6be791abcd1' },
-      { nombre: 'Palta', cantidad: '1 unidad' },
-      { nombre: 'Tomate', cantidad: '1 unidad' },
-      { nombre: 'Mayonesa', cantidad: 'a gusto' },
+      { nombre: 'Palta Hass Granel', cantidad: '1 unidad', productId: '2791acae-e92d-441c-b4f5-4a6f4bb802df' },
+      { nombre: 'Tomate Granel KG', cantidad: '1 unidad', productId: 'f46faa79-a928-4b8f-82e5-098ffe755a2c' },
+      { nombre: 'Mayonesa Hellmanns 186gr', cantidad: 'a gusto', productId: 'd7378d0a-46a9-4009-8b93-8585deb95b56' },
     ],
     pasos: [
       'Tostar las rebanadas de pan.',
@@ -610,7 +610,7 @@ export const RECIPES: Recipe[] = [
     ingredientes: [
       { nombre: 'Tortillas de harina', cantidad: '8 unidades' },
       { nombre: 'Queso Gauda Soprole 1kg', cantidad: '200 g', productId: '8030c739-4690-4489-8299-6d7e4b89e130' },
-      { nombre: 'Jamón', cantidad: '100 g' },
+      { nombre: 'Jamón Pierna Sandwich Receta del Abuelo 1kg', cantidad: '100 g', productId: '6b3e1fb2-972c-4779-b10a-d7168dac46b7' },
     ],
     pasos: [
       'Rallar o cortar el queso en láminas finas.',
@@ -629,7 +629,7 @@ export const RECIPES: Recipe[] = [
     categoria: 'Once/Cena',
     ingredientes: [
       { nombre: 'Pan Molde Blanco Marcelo 500gr', cantidad: '4 rebanadas', productId: 'dd765dda-3775-4f07-8fd3-e6be791abcd1' },
-      { nombre: 'Palta', cantidad: '1 unidad' },
+      { nombre: 'Palta Hass Granel', cantidad: '1 unidad', productId: '2791acae-e92d-441c-b4f5-4a6f4bb802df' },
       { nombre: 'Huevos Primera', cantidad: '2 unidades', productId: 'ce5aa8a5-13d1-4458-839c-0e97902605c3' },
       { nombre: 'Sal Lobos 1kg', cantidad: 'a gusto', productId: 'ec37840e-5e1c-42e7-b7d3-a928a04261d2' },
       { nombre: 'Aceite Natura Maravilla 900ml', cantidad: '1 cucharada', productId: 'bff45cec-5f20-4d88-b465-9eeaf787adb7' },
@@ -777,10 +777,10 @@ export const RECIPES: Recipe[] = [
     tiempo: '45 min',
     categoria: 'Postre',
     ingredientes: [
-      { nombre: 'Harina', cantidad: '1 taza' },
+      { nombre: 'Harina Montblanc 1kg sin polvo', cantidad: '1 taza', productId: 'b49c886f-37f1-4d47-98f3-25d49794b8e7' },
       { nombre: 'Leche Entera Pitrufquen 1lt', cantidad: '1 taza', productId: 'e9ba4e5b-9138-48db-a386-f042459229b4' },
       { nombre: 'Huevos Primera', cantidad: '2 unidades', productId: 'ce5aa8a5-13d1-4458-839c-0e97902605c3' },
-      { nombre: 'Manjar', cantidad: '300 g' },
+      { nombre: 'Chandelle Manjar Nestle', cantidad: '300 g', productId: 'b65ed09a-69fb-4cd4-b599-c8413602132a' },
       { nombre: 'Mantequilla Soprole 125gr', cantidad: '1 cucharada', productId: 'be8b8e38-ac94-4de4-9579-39f7eec6b6b6' },
     ],
     pasos: [

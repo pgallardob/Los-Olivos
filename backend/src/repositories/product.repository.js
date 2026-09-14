@@ -3,7 +3,7 @@ import { config } from '../config/config.js';
 
 let client = null;
 
-function getClient() {
+export function getClient() {
   if (!client && config.supabase.url && config.supabase.serviceRoleKey) {
     client = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
       auth: { persistSession: false },

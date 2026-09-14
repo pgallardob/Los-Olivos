@@ -6,6 +6,7 @@ import { chatRouter } from './routes/chat.routes.js';
 import { healthRouter } from './routes/health.routes.js';
 import { initScheduler } from './services/sync.service.js';
 import { loadCatalog } from './services/product.service.js';
+import { getClient } from './repositories/product.repository.js';
 
 const app = express();
 
@@ -66,6 +67,26 @@ function startKeepAlive() {
   console.log(`[keep-alive] Activo: ping cada 5 min a ${KEEP_ALIVE_URL}`);
 }
 
+// ─── Keep-alive Supabase: consulta trivial cada 6h para evitar pausa por inactividad ───
+const SUPABASE_KEEPALIVE_INTERVAL = 6 * 60 * 60 * 1000; // 6 horas
+
+function startSupabaseKeepAlive() {
+  setInterval(async () => {
+    const client = getClient();
+    if (!client) {
+      console.log('[supabase-keepalive] Supabase no configurado, omitiendo');
+      return;
+    }
+    try {
+      const { error } = await client.from('productos').select('id').limit(1);
+      console.log(`[supabase-keepalive] productos: ${error ? 'ERROR ' + error.message : 'OK'}`);
+    } catch (err) {
+      console.warn(`[supabase-keepalive] productos falló: ${err.message}`);
+    }
+  }, SUPABASE_KEEPALIVE_INTERVAL);
+  console.log('[supabase-keepalive] Activo: consulta cada 6h');
+}
+
 // ─── Inicio ───
 async function start() {
   // Cargar catálogo en memoria si existe (no fallar si no hay archivo)
@@ -86,6 +107,7 @@ async function start() {
     console.log(`[server] Chatbot backend en http://localhost:${config.port}`);
     console.log(`[server] TZ=${config.timezone} | provider=${config.ai.provider}`);
     startKeepAlive();
+    startSupabaseKeepAlive();
   });
 }
 

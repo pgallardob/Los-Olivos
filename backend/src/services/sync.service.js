@@ -93,8 +93,8 @@ export async function syncProducts() {
 }
 
 export function initScheduler() {
-  // Lunes a viernes a las 18:00 (zona horaria del servidor configurada con TZ=America/Santiago)
-  const cronExpr = '0 18 * * 1-5';
+  // Todos los dias a las 18:00 (zona horaria del servidor configurada con TZ=America/Santiago)
+  const cronExpr = '0 18 * * *';
 
   if (!cron.validate(cronExpr)) {
     console.error('[sync] Expresión cron inválida:', cronExpr);
@@ -108,5 +108,5 @@ export function initScheduler() {
     timezone: config.timezone,
   });
 
-  console.log(`[sync] Scheduler activo: L-V 18:00 ${config.timezone}`);
+  console.log(`[sync] Scheduler activo: todos los dias 18:00 ${config.timezone}`);
 }

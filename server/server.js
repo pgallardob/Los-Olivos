@@ -536,9 +536,35 @@ function startKeepAlive() {
   console.log(`[keep-alive] Activo: ping cada 5 min a ${KEEP_ALIVE_URL}`);
 }
 
+// ─── Keep-alive Supabase: consulta trivial cada 6h para evitar pausa por inactividad ───
+const SUPABASE_KEEPALIVE_INTERVAL = 6 * 60 * 60 * 1000; // 6 horas
+
+function startSupabaseKeepAlive() {
+  setInterval(async () => {
+    const tasks = [];
+    if (supabase) {
+      tasks.push(
+        supabase.from('avisos').select('id').limit(1)
+          .then(({ error }) => console.log(`[supabase-keepalive] avisos: ${error ? 'ERROR ' + error.message : 'OK'}`))
+          .catch((err) => console.warn(`[supabase-keepalive] avisos falló: ${err.message}`))
+      );
+    }
+    if (reactionsDb) {
+      tasks.push(
+        reactionsDb.from('aviso_reactions').select('aviso_id').limit(1)
+          .then(({ error }) => console.log(`[supabase-keepalive] reacciones: ${error ? 'ERROR ' + error.message : 'OK'}`))
+          .catch((err) => console.warn(`[supabase-keepalive] reacciones falló: ${err.message}`))
+      );
+    }
+    await Promise.all(tasks);
+  }, SUPABASE_KEEPALIVE_INTERVAL);
+  console.log(`[supabase-keepalive] Activo: consulta cada 6h (avisos: ${!!supabase}, reacciones: ${!!reactionsDb})`);
+}
+
 app.listen(PORT, () => {
   console.log(`Backend corriendo en http://localhost:${PORT}`);
   console.log(`Supabase (avisos): ${supabase ? 'conectado' : 'no configurado'}`);
   console.log(`Supabase (reacciones): ${reactionsDb ? 'conectado' : 'no configurado'}`);
   startKeepAlive();
+  startSupabaseKeepAlive();
 });

@@ -205,10 +205,34 @@ function openContactModal(): void {
   void Swal.fire({
     title: 'Contáctanos',
     html: `
+      <style>
+        .swal2-popup { border-radius: 12px; }
+        .swal2-title { font-size: 1.4rem; margin-bottom: 1rem; }
+        #swal-name, #swal-phone, #swal-email, #swal-message {
+          width: 100%;
+          max-width: 320px;
+          margin: 0.5rem auto;
+          display: block;
+          background: #1a201a;
+          border: 1px solid #3a4a2a;
+          border-radius: 8px;
+          color: #e4eae6;
+          padding: 0.6rem 0.8rem;
+          font-size: 0.9rem;
+          box-shadow: none;
+        }
+        #swal-name:focus, #swal-phone:focus, #swal-email:focus, #swal-message:focus {
+          border-color: #6f8b3f;
+          box-shadow: 0 0 0 2px rgba(111,139,63,0.2);
+        }
+        #swal-message { min-height: 80px; resize: vertical; }
+        .swal2-input::placeholder, .swal2-textarea::placeholder { color: #7a8a6a; }
+        .swal2-validation-message { background: #2a1a1a; color: #e4eae6; border-radius: 6px; }
+      </style>
       <input id="swal-name" class="swal2-input" placeholder="Nombre *" maxlength="80">
       <input id="swal-phone" class="swal2-input" placeholder="Teléfono" maxlength="20">
       <input id="swal-email" class="swal2-input" type="email" placeholder="Email *" maxlength="120">
-      <textarea id="swal-message" class="swal2-textarea" placeholder="Mensaje *" maxlength="500" rows="4" style="resize:vertical;"></textarea>
+      <textarea id="swal-message" class="swal2-textarea" placeholder="Mensaje *" maxlength="500" rows="4"></textarea>
     `,
     showCancelButton: true,
     confirmButtonText: 'Enviar',
@@ -217,6 +241,7 @@ function openContactModal(): void {
     color: '#e4eae6',
     confirmButtonColor: '#6f8b3f',
     cancelButtonColor: '#555',
+    width: '26rem',
     preConfirm: async () => {
       const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim();
       const phone = (document.getElementById('swal-phone') as HTMLInputElement).value.trim();

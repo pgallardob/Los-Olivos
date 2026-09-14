@@ -126,8 +126,15 @@ export async function initFooter(): Promise<void> {
   contactList?.append(
     addressItem(company.address),
     phoneItem(company.phone),
-    contactItem(Mail, company.email, '/avisos.html'),
+    contactItem(Mail, company.email, '#contact-modal'),
   );
+
+  // ─── Modal de contacto directo (envía email sin publicar en la web) ───
+  const contactLink = contactList?.querySelector<HTMLAnchorElement>('a[href="#contact-modal"]');
+  contactLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openContactModal();
+  });
 
   function renderSocials(
     container: Element | null,
@@ -188,4 +195,66 @@ export async function initFooter(): Promise<void> {
   if (copyright) {
     copyright.textContent = `© ${new Date().getFullYear()} ${company.name}. Todos los derechos reservados. Desarrollado por P.Gallardo.`;
   }
+}
+
+function openContactModal(): void {
+  const endpoint = import.meta.env.VITE_AVISOS_API_URL
+    ? `${import.meta.env.VITE_AVISOS_API_URL}/api/contacto`
+    : 'https://los-olivos-avisos.onrender.com/api/contacto';
+
+  void Swal.fire({
+    title: 'Contáctanos',
+    html: `
+      <input id="swal-name" class="swal2-input" placeholder="Nombre *" maxlength="80">
+      <input id="swal-phone" class="swal2-input" placeholder="Teléfono" maxlength="20">
+      <input id="swal-email" class="swal2-input" type="email" placeholder="Email *" maxlength="120">
+      <textarea id="swal-message" class="swal2-textarea" placeholder="Mensaje *" maxlength="500" rows="4" style="resize:vertical;"></textarea>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Enviar',
+    cancelButtonText: 'Cancelar',
+    background: '#161b17',
+    color: '#e4eae6',
+    confirmButtonColor: '#6f8b3f',
+    cancelButtonColor: '#555',
+    preConfirm: async () => {
+      const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim();
+      const phone = (document.getElementById('swal-phone') as HTMLInputElement).value.trim();
+      const email = (document.getElementById('swal-email') as HTMLInputElement).value.trim();
+      const message = (document.getElementById('swal-message') as HTMLTextAreaElement).value.trim();
+
+      if (!name || !email || !message) {
+        Swal.showValidationMessage('Nombre, email y mensaje son obligatorios');
+        return false;
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, phone, email, message }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Error al enviar');
+        }
+        return true;
+      } catch (err) {
+        Swal.showValidationMessage(`Error: ${err instanceof Error ? err.message : 'No se pudo enviar'}`);
+        return false;
+      }
+    },
+  }).then((result) => {
+    if (result.isConfirmed) {
+      void Swal.fire({
+        title: 'Mensaje enviado',
+        text: 'Gracias por contactarnos. Te responderemos a la brevedad.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+        background: '#161b17',
+        color: '#e4eae6',
+        confirmButtonColor: '#6f8b3f',
+      });
+    }
+  });
 }

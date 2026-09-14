@@ -285,6 +285,47 @@ app.post('/api/aviso', upload.single('image'), async (req, res) => {
   }
 });
 
+// ─── Contacto directo (solo envía email, no publica en la web) ───
+app.post('/api/contacto', async (req, res) => {
+  try {
+    const { name, phone, email, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    if (RESEND_API_KEY) {
+      const { error: emailError } = await resend.emails.send({
+        from: MAIL_FROM,
+        to: MAIL_TO,
+        replyTo: email,
+        subject: 'Nuevo mensaje de contacto - Comercializadora Los Olivos',
+        text: `Nombre: ${name}\nTeléfono: ${phone || 'No proporcionado'}\nEmail: ${email}\n\nMensaje:\n${message}`,
+        html: `
+          <h2>Nuevo mensaje de contacto</h2>
+          <p><strong>Nombre:</strong> ${name}</p>
+          <p><strong>Teléfono:</strong> ${phone || 'No proporcionado'}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Mensaje:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `,
+      });
+
+      if (emailError) {
+        console.error('[contacto] Error de Resend:', emailError);
+        return res.status(500).json({ error: 'No se pudo enviar el mensaje' });
+      }
+    } else {
+      console.warn('[contacto] RESEND_API_KEY no configurado');
+    }
+
+    return res.status(200).json({ ok: true, message: 'Mensaje enviado correctamente' });
+  } catch (error) {
+    console.error('[contacto] Error:', error);
+    return res.status(500).json({ error: 'No se pudo enviar el mensaje' });
+  }
+});
+
 // ─── Reacciones (me gusta / me encanta) por aviso ───
 app.post('/api/avisos/:id/react', async (req, res) => {
   try {

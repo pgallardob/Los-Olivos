@@ -96,6 +96,22 @@ Después de que Render asigne las URLs finales:
 
 ## 3. Subir frontend a administrable.cl
 
+### 3.1 Deploy automático por FTP (recomendado)
+
+```bash
+npm run build
+powershell -ExecutionPolicy Bypass -File deploy-ftp.ps1     # sube dist/ a public_html
+powershell -ExecutionPolicy Bypass -File cleanup-ftp.ps1    # OBLIGATORIO tras cada deploy
+```
+
+> **CUOTA DEL HOSTING: ~40 MB compartida (web + correo + papelera `.trash`).**
+> Cada deploy agrega ~25 archivos con hash nuevo; sin limpieza la cuota se llena
+> (error FTP 552, ocurrido el 23-sep-2026). `cleanup-ftp.ps1` borra de
+> `public_html/assets/` todo lo que no esté en el `dist/` local actual.
+> Los 8 zips viejos en `.trash` (15.5 MB) también contaban — limpiados una vez.
+
+### 3.2 Upload manual (alternativa)
+
 1. Entrar al panel de administrable.cl (Webuzo — https://server.001webhospedaje.com:2003)
 2. **File Manager** → `public_html`
 3. Subir todo el contenido de `dist/` (arrastrar los archivos, NO la carpeta dist completa)
@@ -158,9 +174,9 @@ Después de que Render asigne las URLs finales:
 - [x] **Avisos con reintentos** (3 intentos, timeout 60s) ✅
 
 ### SEO (después de que el sitio esté online):
-- [ ] **Google Search Console**: agregar propiedad `comercializadoralosolivos.cl`
-- [ ] **Enviar sitemap**: `https://comercializadoralosolivos.cl/sitemap.xml`
-- [ ] **Google My Business**: reclamar/crear ficha del negocio para Google Maps
+- [x] **Google Search Console**: propiedad `comercializadoralosolivos.cl` verificada, sitemap procesado, 4 páginas descubiertas ✅
+- [x] **Enviar sitemap**: `https://comercializadoralosolivos.cl/sitemap.xml` ✅
+- [x] **Google My Business**: ficha creada ✅ (si Google pide verificación por carta, el código se ingresa en business.google.com con la cuenta del dueño)
 
 ---
 
@@ -183,24 +199,29 @@ Después de que Render asigne las URLs finales:
 
 ## 8. Pendientes
 
-### 8.1 Verificar dominio en Resend (EN PROGRESO)
+### 8.1 Verificar dominio en Resend ✅ COMPLETADO
 - [x] Agregar dominio `comercializadoralosolivos.cl` en https://resend.com/domains
 - [x] Agregar registro DKIM (TXT) → `resend._domainkey` en zona DNS del panel Webuzo
 - [x] Agregar registro CNAME → `rsend` → `rsend.forge.rmta.net`
 - [x] Agregar registro CNAME → `send` → `send.forge.rmta.net`
-- [ ] **Click "Verify" en Resend** — esperar verificación (puede tardar minutos a horas)
-- [ ] Una vez verificado, actualizar `MAIL_FROM` en Render (servicio avisos) a `Los Olivos <paulinacontreras@comercializadoralosolivos.cl>`
-- [ ] Probar envío de aviso desde el sitio
+- [x] Dominio verificado en Resend; `MAIL_FROM` en Render usa `Los Olivos <paulinacontreras@comercializadoralosolivos.cl>`
 
-### 8.2 Google Search Console
-- [ ] Agregar propiedad `comercializadoralosolivos.cl` en https://search.google.com/search-console
-- [ ] Enviar sitemap: `https://comercializadoralosolivos.cl/sitemap.xml`
+### 8.2 Google Search Console ✅ COMPLETADO
+- [x] Propiedad `comercializadoralosolivos.cl` verificada
+- [x] Sitemap enviado y procesado
 
-### 8.3 Google My Business
-- [ ] Crear ficha del negocio en Google Maps para búsquedas locales en Peñaflor
+### 8.3 Google My Business ✅ FICHA CREADA
+- [x] Ficha del negocio creada (Concordia 408 Local A, Peñaflor)
+- [ ] Si Google solicita verificación por carta: ingresar el código en business.google.com (requiere login del dueño)
 
-### 8.4 Limpieza
-- [ ] Borrar archivos temporales: `ftp-script.txt`, `upload-ftp.ps1`, `upload-all-ftp.ps1`, `dist-los-olivos.zip`, `dist-update.zip`
+### 8.4 Limpieza ✅ COMPLETADO (23-sep-2026)
+- [x] Archivos temporales borrados (ftp-script.txt, upload-ftp.ps1, upload-all-ftp.ps1, zips)
+- [x] Scripts FTP con credenciales agregados a `.gitignore` (cleanup-ftp.ps1, delete-duplicates.ps1, list-ftp*.ps1, etc.)
+
+### 8.5 Pendientes abiertos
+- [ ] **Producto "Malla mini frac x3"**: imagen incorrecta en Supabase (error de dato)
+- [ ] **Automatización de imágenes de productos**: requiere crear `GOOGLE_API_KEY` y `GOOGLE_CX` (ver README sección Automatización de imágenes)
+- [ ] **Contraseña `/admin`**: si se olvida, reemplazar `ADMIN_PASSWORD` en Render → los-olivos-avisos → Environment (es un secreto, no es el valor de `server/.env` local)
 
 ---
 

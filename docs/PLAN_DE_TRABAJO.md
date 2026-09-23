@@ -1,5 +1,12 @@
 # Plan de Trabajo — Landing Futurista
 
+> **Estado (actualizado 23-sep-2026):** Fases 7–10 completadas — ambos backends en
+> Render.com, frontend en administrable.cl, dominio + HTTPS activos
+> (`comercializadoralosolivos.cl`, en línea desde agosto 2026). Nuevas features
+> desplegadas: recetario, carrito WhatsApp, buscador, modal contacto, precalentamiento
+> del chatbot y protección anti-envíos duplicados en el formulario de avisos.
+> Los pendientes abiertos viven en la sección "Pendientes" del README.
+
 ## Objetivo
 
 Entregar una landing page empresarial premium, mantenible y de alto rendimiento,

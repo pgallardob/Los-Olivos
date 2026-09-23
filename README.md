@@ -73,6 +73,7 @@ ligeras. Sin frameworks pesados.
 ├── docs/                      # Documentación del proyecto
 ├── deploy-ftp.ps1             # Script de deploy FTP a producción
 ├── deploy-check.ps1           # Script de verificación post-deploy
+├── cleanup-ftp.ps1            # Limpieza de assets viejos en el servidor (ejecutar tras cada deploy)
 ├── .env / .env.example        # Variables de entorno
 ├── package.json
 ├── tsconfig.json
@@ -96,10 +97,20 @@ npm run typecheck  # solo verificación de tipos
 ```bash
 npm run build
 powershell -ExecutionPolicy Bypass -File deploy-ftp.ps1
+powershell -ExecutionPolicy Bypass -File cleanup-ftp.ps1
 ```
 
 El script `deploy-ftp.ps1` sube todos los archivos de `dist/` al hosting
 (administrable.cl / Webuzo) por FTP. Credenciales configuradas en el script.
+
+### Limpieza post-deploy (OBLIGATORIA)
+
+**El plan de hosting tiene una cuota de disco de ~40 MB (compartida web + correo).**
+Cada build genera ~25 archivos con hashes nuevos; los bundles viejos quedan en el
+servidor y llenan la cuota (ocurrió el 23-sep-2026: error FTP 552 y el sitio quedó
+sin poder actualizarse). `cleanup-ftp.ps1` borra de `public_html/assets/` todo
+archivo que no esté en el `dist/` local actual — ejecutar SIEMPRE después de
+cada deploy. La papelera `.trash` del hosting también cuenta para la cuota.
 
 ### Verificación post-deploy
 
@@ -193,6 +204,19 @@ Para obtener las credenciales de Google:
 - Reacciones (Me gusta / Me encanta)
 - Contador regresivo de vigencia
 - Footer con QR y links de interés
+- Formulario protegido contra envíos duplicados: el botón "Enviar" se deshabilita
+  mientras viaja la petición y un flag interno bloquea envíos simultáneos
+  (23-sep-2026: clics repetidos con el backend dormido crearon 4 avisos duplicados)
+- Mensaje "No hay avisos vigentes publicados." cuando la lista está vacía
+
+### Chatbot (widget flotante, todas las páginas)
+
+- Widget de chat conectado al backend Gemini (`backend/`)
+- Precalentamiento: al cargar la página se hace `fetch` a `/api/health` para
+  despertar el backend dormido (Render free duerme tras 15 min de inactividad)
+- Si el usuario abre el chat antes de que conecte: mensaje centrado
+  "Conectando con el asistente..." y header dinámico "Conectando..." → "En línea"
+- Componente: `src/components/chatbot.ts`
 
 ## Variables de entorno
 
@@ -266,15 +290,23 @@ Se revisaron y corrigieron todos los textos visibles al usuario en `index.html`,
 
 ### Tareas manuales externas
 
-1. **Resend**: registros DNS agregados (DKIM TXT + 2 CNAME), falta click "Verify" en resend.com/domains. Luego actualizar `MAIL_FROM` en Render.
-2. **Google Search Console**: agregar propiedad y enviar sitemap.
-3. **Google My Business**: crear ficha en Google Maps.
+1. **Google My Business**: ficha creada. Si Google solicita verificación por carta,
+   el código se ingresa en business.google.com con la cuenta Google del dueño.
+2. **Contraseña del panel `/admin`**: `ADMIN_PASSWORD` es un secreto que SOLO existe
+   en el dashboard de Render (no es el valor de `server/.env` local). Si se olvida:
+   Render → servicio `los-olivos-avisos` → Environment → reemplazar valor → Save
+   (redespliega solo, ~2 min).
+3. **Hosting**: cuota de disco ~40 MB compartida (web + correo + papelera). Después
+   de cada deploy ejecutar `cleanup-ftp.ps1` (ver sección Deploy).
+
+Completadas: dominio de Resend verificado (`MAIL_FROM` ya usa
+`paulinacontreras@comercializadoralosolivos.cl`), Google Search Console
+(propiedad verificada, sitemap procesado).
 
 ### Tareas de desarrollo
 
 4. **Productos sin imagen en Supabase**: el sistema muestra placeholder `sinimg.jpeg` cuando `imagen_url` es null. Automatización con Google Custom Search API pendiente de credenciales (`GOOGLE_API_KEY` y `GOOGLE_CX` en `backend/.env`).
 5. **Producto "Malla mini frac x3"**: tiene imagen incorrecta en Supabase (error de dato, no de código).
-6. **Recetario**: enlazar más ingredientes con IDs reales de productos del catálogo.
 
 ## Documentación
 

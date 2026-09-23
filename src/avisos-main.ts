@@ -188,7 +188,7 @@ async function loadAvisos(): Promise<void> {
       const avisos: Aviso[] = await res.json();
 
       if (avisos.length === 0) {
-        container.innerHTML = '<p class="avisos-empty">No hay avisos publicados todavía.</p>';
+        container.innerHTML = '<p class="avisos-empty">No hay avisos vigentes publicados.</p>';
         return;
       }
 

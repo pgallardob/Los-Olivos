@@ -51,9 +51,12 @@ function showQuoteDialog(): void {
     didOpen: () => {
       const form = document.getElementById('quote-form') as HTMLFormElement | null;
       const cancelButton = document.getElementById('quote-cancel');
+      const submitButton = form?.querySelector<HTMLButtonElement>('.quote-form-submit') ?? null;
+      let isSending = false;
 
       form?.addEventListener('submit', (event) => {
         event.preventDefault();
+        if (isSending) return;
         const endpoint = import.meta.env.VITE_FORM_ENDPOINT as string | undefined;
         const data = new FormData(form);
         const name = String(data.get('name') ?? '');
@@ -95,6 +98,9 @@ function showQuoteDialog(): void {
           return;
         }
 
+        isSending = true;
+        submitButton?.setAttribute('disabled', 'true');
+
         const sendRequest = imageFile
           ? fetch(endpoint, {
               method: 'POST',
@@ -132,6 +138,10 @@ function showQuoteDialog(): void {
               color: '#e4eae6',
               confirmButtonColor: '#6f8b3f',
             });
+          })
+          .finally(() => {
+            isSending = false;
+            submitButton?.removeAttribute('disabled');
           });
       });
 

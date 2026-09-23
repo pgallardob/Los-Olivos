@@ -16,3 +16,15 @@ deploy-result.txt
 ftp-test-result.txt
 test-ftp.ps1
 scripts/auto-images.log
+
+# Scripts FTP locales (contienen credenciales)
+cleanup-ftp.ps1
+delete-duplicates.ps1
+empty-trash.ps1
+list-ftp.ps1
+list-ftp-dist.ps1
+list-ftp-trash.ps1
+size-ftp.ps1
+
+# Referencia local del catalogo
+products.json

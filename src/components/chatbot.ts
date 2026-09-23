@@ -6,6 +6,30 @@
 
 const CHATBOT_API_URL = import.meta.env.VITE_CHATBOT_API_URL || 'http://localhost:3002/api';
 
+let backendReady = false;
+let warmupPromise: Promise<void> | null = null;
+
+function warmUpBackend(): Promise<void> {
+  if (backendReady) return Promise.resolve();
+  if (warmupPromise) return warmupPromise;
+
+  warmupPromise = fetch(`${CHATBOT_API_URL}/health`, {
+    method: 'GET',
+    cache: 'no-store',
+  })
+    .then((res) => {
+      if (res.ok) backendReady = true;
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      warmupPromise = null;
+    });
+
+  return warmupPromise;
+}
+
+void warmUpBackend();
+
 interface ChatMessage {
   role: 'bot' | 'user';
   text: string;
@@ -58,12 +82,42 @@ export function initChatbot(): void {
   const input = container.querySelector<HTMLInputElement>('.nx-chatbot__input')!;
   const sendBtn = container.querySelector<HTMLButtonElement>('.nx-chatbot__send')!;
   const badge = container.querySelector<HTMLSpanElement>('.nx-chatbot__toggle-badge')!;
+  const statusEl = container.querySelector<HTMLSpanElement>('.nx-chatbot__header-status')!;
 
   let isOpen = false;
   let isSending = false;
   let hasInteracted = false;
 
   const messages: ChatMessage[] = [];
+
+  let connectingEl: HTMLElement | null = null;
+
+  function updateHeaderStatus(): void {
+    statusEl.textContent = backendReady ? 'En línea' : 'Conectando...';
+  }
+
+  function hideConnecting(): void {
+    connectingEl?.remove();
+    connectingEl = null;
+  }
+
+  function showConnecting(): void {
+    if (backendReady || connectingEl) return;
+
+    connectingEl = document.createElement('div');
+    connectingEl.className = 'nx-chatbot__msg nx-chatbot__msg--status';
+    connectingEl.textContent = 'Conectando con el asistente...';
+    messagesEl.append(connectingEl);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    void warmUpBackend().then(() => {
+      hideConnecting();
+      updateHeaderStatus();
+    });
+  }
+
+  updateHeaderStatus();
+  void warmUpBackend().then(() => updateHeaderStatus());
 
   function escapeHtml(text: string): string {
     const div = document.createElement('div');
@@ -117,6 +171,10 @@ export function initChatbot(): void {
     if (!hasInteracted) {
       hasInteracted = true;
       addMessage('bot', '¡Hola! Soy el asistente virtual de Comercializadora Los Olivos. Puedo ayudarte con precios, stock y información del negocio. ¿Qué necesitas?');
+    }
+
+    if (!backendReady) {
+      showConnecting();
     }
   }
 

@@ -210,6 +210,16 @@
   text-align: center;
 }
 
+.nx-chatbot__msg--status {
+  background: var(--nx-graphite);
+  border: 1px dashed var(--nx-olive-dark);
+  color: var(--nx-metal);
+  align-self: center;
+  font-size: 0.8rem;
+  font-style: italic;
+  text-align: center;
+}
+
 /* Indicador de escritura */
 .nx-chatbot__typing {
   display: none;

@@ -18,7 +18,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
-const allowedOrigins = CLIENT_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
+const baseOrigins = CLIENT_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
+// Incluir tambien la variante con www de cada origen (https://dominio.cl -> https://www.dominio.cl)
+const allowedOrigins = [...new Set(baseOrigins.flatMap((o) => [o, o.replace('://', '://www.')]))];
 const MAIL_TO = process.env.MAIL_TO || 'pgallardob@hotmail.com';
 const MAIL_FROM = process.env.MAIL_FROM || 'Los Olivos <onboarding@resend.dev>';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;

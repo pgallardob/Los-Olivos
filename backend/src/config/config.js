@@ -33,10 +33,16 @@ export const config = {
   },
 
   cors: {
-    origins: (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:5173')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean),
+    // Incluir tambien la variante con www de cada origen (https://dominio.cl -> https://www.dominio.cl)
+    origins: [
+      ...new Set(
+        (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:5173')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .flatMap((o) => [o, o.replace('://', '://www.')]),
+      ),
+    ],
   },
 
   rateLimit: {

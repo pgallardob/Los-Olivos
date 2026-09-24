@@ -166,6 +166,7 @@ const company: CompanyInfo = {
     { name: 'La Osita', icon: '', url: 'https://www.instagram.com/emporiolaosita?igsi=YWxtOW50czhtdWli', image: new URL('../../assets/laosita.jpeg', import.meta.url).href },
     { name: 'EFI', icon: '', url: 'https://www.instagram.com/efiregalos?igsi=MXRmaXByNjlmb3VzYQ==', image: new URL('../../assets/efi.jpg', import.meta.url).href },
     { name: 'Los Olivos', icon: '', url: 'https://www.instagram.com/comercializadora_los_olivos_?igsh=MXR1aWJqMzdmYmZibA==', image: new URL('../../assets/los_olivos.jpg', import.meta.url).href },
+    { name: 'NicoVet', icon: '', url: 'https://www.instagram.com/vet.nico_/', image: new URL('../../assets/nicovet.svg', import.meta.url).href },
   ],
 };
 

@@ -1338,7 +1338,7 @@ sl-button.navbar-cta::part(base) {
   margin: 0 !important;
   padding: 0 !important;
 
-  gap: 1.25rem !important;
+  gap: 0.5rem !important;
 
   list-style: none !important;
 }

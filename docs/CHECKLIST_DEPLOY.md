@@ -190,6 +190,7 @@ powershell -ExecutionPolicy Bypass -File cleanup-ftp.ps1    # OBLIGATORIO tras c
 - **Supabase**: base de datos y storage de imágenes. Ya configurado, no requiere cambios.
 - **Dominio en metas**: configurado como `comercializadoralosolivos.cl` en canonical, og:url, sitemap, robots.txt y JSON-LD.
 - **Build**: ejecutar `npx vite build` después de cambiar `.env`.
+- **CORS www** (24-sep-2026): ambos backends aceptan cada origen configurado también con su variante `www` (`server/server.js` y `backend/src/config/config.js`). Antes, `www.comercializadoralosolivos.cl` no tenía header ACAO (avisos) y recibía 500 (chatbot), rompiendo la página de avisos y el chatbot para usuarios con www.
 - **render.yaml**: archivo de configuración para desplegar ambos backends de una sola vez en Render.
 - **Hosting**: administrable.cl usa panel Webuzo (no cPanel). URL del panel: `https://server.001webhospedaje.com:2003`
 - **FTP**: Host `server.001webhospedaje.com:21`, usuario `yftqrecu` (credenciales en email de bienvenida)

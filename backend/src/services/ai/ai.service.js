@@ -65,6 +65,14 @@ export async function generateResponse(userMessage, context, intent, history = [
   const systemPrompt = getSystemPrompt();
   const contextBlock = `Contexto del catálogo:\n${context || 'Sin contexto de productos.'}`;
 
-  const reply = await ai.generateResponse(systemPrompt, userMessage, contextBlock, history);
+  let reply;
+  try {
+    reply = await ai.generateResponse(systemPrompt, userMessage, contextBlock, history);
+  } catch (firstError) {
+    // Reintento único tras pausa breve (la API falla intermitentemente por límite de tasa)
+    console.error('[ai] reintento tras error:', firstError.message);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    reply = await ai.generateResponse(systemPrompt, userMessage, contextBlock, history);
+  }
   return verifyPrices(reply, context);
 }

@@ -1,4 +1,4 @@
-import { fuzzyMatch, normalizeQuery, normalizeProductName, spellMatch, levenshtein } from '../utils/normalize.js';
+import { fuzzyMatch, hasWord, normalizeQuery, normalizeProductName, spellMatch, levenshtein } from '../utils/normalize.js';
 
 const INTENT_PATTERNS = {
   business_saturday: [
@@ -285,7 +285,8 @@ export function searchProducts(message, productos) {
         if (pOriginalName === originalQuery) score += 20;
       }
       // Match por inclusión en nombre (case-insensitive)
-      else if (pName.includes(query)) {
+      // Palabra única: solo si aparece como palabra completa (evita "pan" dentro de "rupanco")
+      else if (pName.includes(query) && (query.includes(' ') || hasWord(pName, query))) {
         score = 80;
         // Bonus si el query original está contenido con case exacto
         if (pOriginalName.includes(originalQuery)) score += 15;
@@ -307,10 +308,10 @@ export function searchProducts(message, productos) {
       else if (pMarca && pMarca.length > 2 && (pMarca === query || pMarca.includes(query) || (query.length > 2 && query.includes(pMarca)))) {
         score = 45;
       }
-      // Match parcial: al menos una palabra significativa
+      // Match parcial: al menos una palabra significativa (por palabra completa)
       else {
         const matchCount = words.filter((w) =>
-          w.length > 2 && (pName.includes(w) || pSku.includes(w) || pCat.includes(w) || pMarca.includes(w))
+          w.length > 2 && (hasWord(pName, w) || pSku.includes(w) || hasWord(pCat, w) || hasWord(pMarca, w))
         ).length;
         if (matchCount > 0) {
           score = 30 + matchCount * 5;
@@ -321,8 +322,10 @@ export function searchProducts(message, productos) {
       if (score === 0 && words.length > 0) {
         const targetWords = pName.split(' ').filter((w) => w.length > 2);
         let bestSpellScore = 0;
-        for (const qw of words) {
-          if (qw.length < 3) continue;
+        let matchedWords = 0;
+        const eligibleWords = words.filter((w) => w.length >= 3);
+        for (const qw of eligibleWords) {
+          let wordMatched = false;
           for (const tw of targetWords) {
             // Match directo palabra vs palabra
             if (spellMatch(qw, tw)) {
@@ -331,9 +334,11 @@ export function searchProducts(message, productos) {
               const similarity = 1 - dist / maxLen;
               const spellScore = Math.round(similarity * 25);
               if (spellScore > bestSpellScore) bestSpellScore = spellScore;
+              wordMatched = true;
             }
             // Match del query contra substrings del target (ej: 'cafee' vs 'cafe' dentro de 'nescafe')
-            if (tw.length > qw.length) {
+            // Solo si la palabra del query es una parte sustancial del target
+            if (tw.length > qw.length && qw.length >= tw.length * 0.65) {
               const subLen = qw.length;
               for (let i = 0; i <= tw.length - subLen; i++) {
                 const sub = tw.substring(i, i + subLen);
@@ -342,12 +347,17 @@ export function searchProducts(message, productos) {
                   const similarity = 1 - dist / qw.length;
                   const spellScore = Math.round(similarity * 20);
                   if (spellScore > bestSpellScore) bestSpellScore = spellScore;
+                  wordMatched = true;
                 }
               }
             }
           }
+          if (wordMatched) matchedWords++;
         }
-        if (bestSpellScore > 0) score = bestSpellScore;
+        // Con varias palabras en el query, todas deben tener coincidencia
+        // (evita falsos positivos como "polo"≈"pollo" en "maruchan pollo" para "marco polo")
+        const allWordsMatched = eligibleWords.length <= 1 || matchedWords === eligibleWords.length;
+        if (bestSpellScore > 0 && allWordsMatched) score = bestSpellScore;
       }
 
       return { product: p, score };
@@ -369,11 +379,11 @@ export function searchProducts(message, productos) {
           const pName = normalizeProductName(p.nombre);
           let score = 0;
           if (pName === relaxedQuery) score = 100;
-          else if (pName.includes(relaxedQuery)) score = 80;
+          else if (pName.includes(relaxedQuery) && (relaxedQuery.includes(' ') || hasWord(pName, relaxedQuery))) score = 80;
           else if (fuzzyMatch(relaxedQuery, p.nombre)) score = 60;
           else {
             const matchCount = significantWords.filter((w) =>
-              w.length > 2 && pName.includes(w)
+              w.length > 2 && hasWord(pName, w)
             ).length;
             if (matchCount > 0) score = 30 + matchCount * 5;
           }
@@ -397,9 +407,7 @@ export function buildContext(results, intent) {
   const lines = results.map((p) => {
     const parts = [`Producto: ${p.nombre}`, `Precio: $${p.precio}`];
 
-    if (intent.subtype === 'stock' || intent.subtype === 'price') {
-      parts.push(`Stock disponible: ${p.stock > 0 ? 'sí' : 'no'} (${p.stock} unidades)`);
-    }
+    parts.push(`Stock disponible: ${p.stock > 0 ? 'sí' : 'no (agotado)'}`);
 
     if (p.categoria) parts.push(`Categoría: ${p.categoria}`);
     if (p.marca) parts.push(`Marca: ${p.marca}`);

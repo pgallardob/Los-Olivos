@@ -55,20 +55,27 @@ export async function handleChat(req, res) {
       productContext = buildContext(results, intent);
     }
 
-    // 4a. Si es intención general (no producto ni negocio), enviar a IA con contexto del negocio
+    // 4a. Si es intención general (no producto ni negocio), buscar productos primero
+    //     (puede ser una marca o producto sin palabras clave como "tienen"/"hay");
+    //     si no hay coincidencias, enviar a IA con contexto del negocio
     if (intent.type === 'general') {
-      const info = getBusinessInfo();
-      if (info) {
-        productContext = `Contexto del negocio:\n` +
-          `Nombre: ${info.nombre}\n` +
-          `Dirección: ${info.direccion}\n` +
-          `Teléfono: ${info.telefono}\n` +
-          `WhatsApp: ${info.whatsapp}\n` +
-          `Horarios: Lunes a sábado 10:00-19:00, domingo cerrado\n` +
-          `Pedidos: ${info.pedidos || 'Por WhatsApp o en el local'}\n` +
-          `Delivery: ${info.delivery || 'Consultar por WhatsApp'}\n` +
-          `Pagos: ${info.metodos_pago || 'Efectivo y transferencia'}\n` +
-          `Redes: Instagram ${info.redes?.instagram || 'N/A'}, WhatsApp ${info.redes?.whatsapp || 'N/A'}`;
+      results = searchProducts(message, catalog.productos);
+      if (results.length > 0) {
+        productContext = buildContext(results, intent);
+      } else {
+        const info = getBusinessInfo();
+        if (info) {
+          productContext = `Contexto del negocio:\n` +
+            `Nombre: ${info.nombre}\n` +
+            `Dirección: ${info.direccion}\n` +
+            `Teléfono: ${info.telefono}\n` +
+            `WhatsApp: ${info.whatsapp}\n` +
+            `Horarios: Lunes a sábado 10:00-19:00, domingo cerrado\n` +
+            `Pedidos: ${info.pedidos || 'Por WhatsApp o en el local'}\n` +
+            `Delivery: ${info.delivery || 'Consultar por WhatsApp'}\n` +
+            `Pagos: ${info.metodos_pago || 'Efectivo y transferencia'}\n` +
+            `Redes: Instagram ${info.redes?.instagram || 'N/A'}, WhatsApp ${info.redes?.whatsapp || 'N/A'}`;
+        }
       }
     }
 
@@ -99,6 +106,12 @@ export async function handleChat(req, res) {
     res.json({ reply });
   } catch (error) {
     console.error('[chat]', error.message);
+    // Si era una consulta de producto sin resultados, mensaje amable en vez de error genérico
+    if (intent?.type === 'product' && productContext.startsWith('No se encontró')) {
+      return res.json({
+        reply: 'Lo siento, no encontramos ese producto en el catálogo por ahora. ¿Quieres que busque algo similar o que te muestre algunas sugerencias?',
+      });
+    }
     res.json({
       reply: getFallbackResponse(productContext),
     });
@@ -212,8 +225,8 @@ function getFallbackResponse(productContext = '') {
         const nombre = line.match(/Producto: (.+?), Precio:/)?.[1] || line.match(/Producto: (.+)/)?.[1] || '';
         const precioMatch = line.match(/Precio: \$(.+?)(?:,|$)/);
         const precio = precioMatch ? precioMatch[1].trim() : '';
-        const stockMatch = line.match(/Stock disponible: (sí|no) \((\d+) unidades\)/);
-        const stock = stockMatch ? (stockMatch[1] === 'sí' ? `${stockMatch[2]} unidades` : 'agotado') : '';
+        const stockMatch = line.match(/Stock disponible: (sí|no)/);
+        const stock = stockMatch && stockMatch[1] === 'no' ? 'agotado' : '';
         if (!nombre || !precio) return null;
         return stock ? `• ${nombre} — $${precio} (${stock})` : `• ${nombre} — $${precio}`;
       })
@@ -250,7 +263,7 @@ function getSuggestions(productos) {
   const pool = withStock.length >= 5 ? withStock : productos;
   const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 5);
   const lines = shuffled.map(p => {
-    const stock = p.stock > 0 ? ` (${p.stock} unidades)` : ' (agotado)';
+    const stock = p.stock > 0 ? '' : ' (agotado)';
     return `• ${p.nombre} — $${p.precio}${stock}`;
   });
   return `¡Claro! Aquí te dejo algunas sugerencias de nuestro catálogo:\n${lines.join('\n')}\n\n¿Te interesa alguno o quieres buscar algo específico?`;

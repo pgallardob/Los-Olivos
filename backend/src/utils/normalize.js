@@ -38,13 +38,27 @@ export function levenshtein(a, b) {
   return dp[m][n];
 }
 
+export function hasWord(text, word) {
+  return text
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .includes(word);
+}
+
 export function spellMatch(queryWord, targetWord, maxDistance = null) {
   if (queryWord === targetWord) return true;
-  if (targetWord.includes(queryWord) || queryWord.includes(targetWord)) return true;
+  const minLen = Math.min(queryWord.length, targetWord.length);
+  if (minLen >= 4 && (targetWord.includes(queryWord) || queryWord.includes(targetWord))) return true;
   const maxLen = Math.max(queryWord.length, targetWord.length);
   const threshold = maxDistance || Math.floor(maxLen / 3);
   if (threshold < 1) return false;
-  return levenshtein(queryWord, targetWord) <= threshold;
+  if (levenshtein(queryWord, targetWord) <= threshold) return true;
+  const qSingular = queryWord.length > 3 && queryWord.endsWith('s') ? queryWord.slice(0, -1) : queryWord;
+  const tSingular = targetWord.length > 3 && targetWord.endsWith('s') ? targetWord.slice(0, -1) : targetWord;
+  if (qSingular !== queryWord || tSingular !== targetWord) {
+    return spellMatch(qSingular, tSingular, maxDistance);
+  }
+  return false;
 }
 
 export function fuzzyMatch(query, target) {
@@ -56,8 +70,13 @@ export function fuzzyMatch(query, target) {
   // Match exacto
   if (t === q) return true;
 
-  // Match por inclusión (query contenido en target o viceversa)
-  if (t.includes(q) || q.includes(t)) return true;
+  // Match por inclusión: frases completas por contención; palabra única solo si
+  // aparece como palabra completa en el target (evita "pan" dentro de "rupanco")
+  if (q.includes(' ')) {
+    if (t.includes(q) || q.includes(t)) return true;
+  } else if (hasWord(t, q)) {
+    return true;
+  }
 
   // Match por palabras: todas las palabras de query deben estar en target
   const queryWords = q.split(' ').filter((w) => w.length > 2);
@@ -66,7 +85,7 @@ export function fuzzyMatch(query, target) {
   if (queryWords.length === 0) return false;
 
   const allMatch = queryWords.every((qw) =>
-    targetWords.some((tw) => tw.includes(qw) || qw.includes(tw) || spellMatch(qw, tw))
+    targetWords.some((tw) => spellMatch(qw, tw))
   );
 
   return allMatch;

@@ -120,7 +120,12 @@ export async function initFooter(): Promise<void> {
   if (description) description.textContent = company.tagline;
 
   const hours = document.getElementById('footer-hours');
-  if (hours) hours.textContent = company.hours;
+  if (hours) {
+    // "Lun–Sab 10:00–19:00 hrs" -> dos lineas: dias con sangria y horario debajo
+    const [days, ...time] = company.hours.split(' ');
+    hours.textContent = '';
+    hours.append(`\u00a0\u00a0\u00a0${days}`, document.createElement('br'), time.join(' '));
+  }
 
   const contactList = document.getElementById('footer-contact-list');
   contactList?.append(

@@ -76,15 +76,19 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/health', async (_req, res) => {
   const results = {};
+  // Timeout: si Supabase tarda (ej: arranque del deploy), responder rapido igual
+  // (evita que el health check de Render marque el deploy como fallido)
+  const withTimeout = (query) =>
+    Promise.race([query, new Promise((resolve) => setTimeout(() => resolve({ error: 'timeout' }), 2000))]);
   if (supabase) {
     try {
-      const { error } = await supabase.from('avisos').select('id').limit(1);
+      const { error } = await withTimeout(supabase.from('avisos').select('id').limit(1));
       results.avisos = error ? 'ERROR' : 'OK';
     } catch { results.avisos = 'ERROR'; }
   }
   if (reactionsDb) {
     try {
-      const { error } = await reactionsDb.from('aviso_reactions').select('aviso_id').limit(1);
+      const { error } = await withTimeout(reactionsDb.from('aviso_reactions').select('aviso_id').limit(1));
       results.reacciones = error ? 'ERROR' : 'OK';
     } catch { results.reacciones = 'ERROR'; }
   }

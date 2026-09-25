@@ -7,7 +7,8 @@ function deDiminutive(word) {
   if (!m || m[1].length < 2) return [];
   const base = m[1];
   if (/[aeiou]$/.test(base)) return [base];
-  return [base + 'a', base + 'o'];
+  // Base consonante final: "pancito"→"pan" (base intacta) o "papita"→"papa" (vocal caida)
+  return [base, base + 'a', base + 'o'];
 }
 
 const INTENT_PATTERNS = {
@@ -182,6 +183,9 @@ const INTENT_PATTERNS = {
     /buscas\s+/,
     /busca\s+/,
     /buscando\s+/,
+    /quiero\s+/,
+    /kiero\s+/,
+    /necesito\s+/,
   ],
   product_general: [
     /que\s+productos\s+tienen/,
@@ -189,6 +193,33 @@ const INTENT_PATTERNS = {
     /lista\s+de\s+productos/,
   ],
 };
+
+// Match estricto para bases cortas de diminutivos (≤4 letras): exacto, plural o inclusión.
+// Evita que "pana"~"pina", "pana"~"panda" o "pan"~"pap" generen falsos positivos por Levenshtein-1.
+function baseMatch(b, tw) {
+  if (b === tw) return true;
+  if (b.length >= 4 && (tw.includes(b) || b.includes(tw))) return true;
+  const bS = b.length > 3 && b.endsWith('s') ? b.slice(0, -1) : b;
+  const tS = tw.length > 3 && tw.endsWith('s') ? tw.slice(0, -1) : tw;
+  return bS === tS && bS.length > 2;
+}
+
+// Comparación de un candidato (palabra original o base de diminutivo) contra una palabra del target
+function candMatch(qw, c, tw) {
+  if (c === qw) return spellMatch(c, tw);
+  if (c.length <= 4) return baseMatch(c, tw);
+  return spellMatch(c, tw);
+}
+
+// Fuzzy considerando bases de diminutivos: "pancito" matchea "pan" en "pan frica"
+function fuzzyMatchDim(words, pName) {
+  const targetWords = pName.split(' ').filter((w) => w.length > 2);
+  if (targetWords.length === 0) return false;
+  return words.every((w) => {
+    const cands = [w, ...deDiminutive(w)];
+    return targetWords.some((tw) => cands.some((c) => candMatch(w, c, tw)));
+  });
+}
 
 export function detectIntent(message) {
   const lower = message.toLowerCase().trim();
@@ -273,6 +304,13 @@ export function searchProducts(message, productos, options = {}) {
     'abren', 'cierran', 'atienden', 'horario', 'horarios',
     'buen', 'buena', 'buenos', 'buenas', 'gracias', 'nada', 'todo', 'todas',
     'busco', 'busca', 'buscas', 'buscando',
+    // Conversacionales / estilo WhatsApp (no deben contaminar la busqueda de productos)
+    'comi', 'comia', 'comio', 'comimos', 'comer', 'comiendo', 'compro', 'compra', 'comprar',
+    'kiero', 'keria', 'kieren', 'quiere', 'queria', 'quisiera', 'quisiese',
+    'dime', 'dame', 'ensename', 'muestrame', 'pasame', 'traeme',
+    'yame', 'yapo', 'yapu', 'ya', 'xq', 'pq', 'tb', 'tbn', 'dnd',
+    'toy', 'toi', 'voi', 'voy', 'oye', 'oie', 'oe', 'wena', 'weno',
+    'entonces', 'igual', 'ando', 'pos',
   ];
 
   const words = normalizeQuery(message)
@@ -310,13 +348,22 @@ export function searchProducts(message, productos, options = {}) {
         if (pOriginalName.includes(originalQuery)) score += 15;
       }
       // Match por todas las palabras en nombre
-      else if (fuzzyMatch(query, p.nombre)) {
-        score = 60;
-        // Bonus si todas las palabras originales están en el nombre con case
-        const caseMatchCount = originalWords.filter((w) =>
-          pOriginalName.includes(w)
-        ).length;
-        if (caseMatchCount === originalWords.length) score += 10;
+      else if (fuzzyMatch(query, p.nombre) || fuzzyMatchDim(words, pName)) {
+        // Si el query trae diminutivos, exigir que la base matchee como palabra
+        // (evita que "pancito"≈"gansito" rankee sobre "pan" en "pan frica")
+        const dimWords = words.filter((w) => deDiminutive(w).length > 0);
+        const baseOk = dimWords.length === 0 || dimWords.every((w) => {
+          const bases = deDiminutive(w);
+          return pName.split(' ').filter((tw) => tw.length > 2).some((tw) => bases.some((b) => candMatch(w, b, tw)));
+        });
+        if (baseOk) {
+          score = 60;
+          // Bonus si todas las palabras originales están en el nombre con case
+          const caseMatchCount = originalWords.filter((w) =>
+            pOriginalName.includes(w)
+          ).length;
+          if (caseMatchCount === originalWords.length) score += 10;
+        }
       }
       // Match por categoría
       else if (pCat && pCat.length > 2 && (pCat === query || pCat.includes(query) || (query.length > 2 && query.includes(pCat)))) {
@@ -326,10 +373,11 @@ export function searchProducts(message, productos, options = {}) {
       else if (pMarca && pMarca.length > 2 && (pMarca === query || pMarca.includes(query) || (query.length > 2 && query.includes(pMarca)))) {
         score = 45;
       }
-      // Match parcial: al menos una palabra significativa (por palabra completa)
+      // Match parcial: al menos una palabra significativa (por palabra completa, incluye base de diminutivo)
       else {
         const matchCount = words.filter((w) =>
-          w.length > 2 && (hasWord(pName, w) || pSku.includes(w) || hasWord(pCat, w) || hasWord(pMarca, w))
+          w.length > 2 && (hasWord(pName, w) || pSku.includes(w) || hasWord(pCat, w) || hasWord(pMarca, w) ||
+            deDiminutive(w).some((b) => hasWord(pName, b) || hasWord(pCat, b) || hasWord(pMarca, b)))
         ).length;
         if (matchCount > 0) {
           score = 30 + matchCount * 5;
@@ -348,8 +396,9 @@ export function searchProducts(message, productos, options = {}) {
           const candidates = [qw, ...deDiminutive(qw)];
           for (const tw of targetWords) {
             for (const cw of candidates) {
+            const strictBase = cw !== qw && cw.length <= 4;
             // Match directo palabra vs palabra
-            if (spellMatch(cw, tw)) {
+            if (candMatch(qw, cw, tw)) {
               const dist = levenshtein(cw, tw);
               const maxLen = Math.max(cw.length, tw.length);
               const similarity = 1 - dist / maxLen;
@@ -363,13 +412,25 @@ export function searchProducts(message, productos, options = {}) {
               const subLen = cw.length;
               for (let i = 0; i <= tw.length - subLen; i++) {
                 const sub = tw.substring(i, i + subLen);
-                if (spellMatch(cw, sub)) {
+                if (candMatch(qw, cw, sub)) {
                   const dist = levenshtein(cw, sub);
                   const similarity = 1 - dist / cw.length;
                   const spellScore = Math.round(similarity * 20);
                   if (spellScore > bestSpellScore) bestSpellScore = spellScore;
                   wordMatched = true;
                 }
+              }
+            }
+            // Typo pesado estilo WhatsApp: mismo prefijo (3+ letras) con mayor distancia permitida
+            // (no aplica a bases cortas de diminutivos: "pana"~"panda" seria falso positivo)
+            if (!strictBase && cw.length >= 4 && tw.length >= 4 && cw.slice(0, 3) === tw.slice(0, 3)) {
+              const pfxDist = levenshtein(cw, tw);
+              const pfxMaxLen = Math.max(cw.length, tw.length);
+              if (pfxDist > 0 && pfxDist <= Math.floor(pfxMaxLen / 2)) {
+                const pfxSim = 1 - pfxDist / pfxMaxLen;
+                const pfxScore = Math.round(pfxSim * 25);
+                if (pfxScore > bestSpellScore) bestSpellScore = pfxScore;
+                wordMatched = true;
               }
             }
             }

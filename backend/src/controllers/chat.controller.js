@@ -86,6 +86,11 @@ export async function handleChat(req, res) {
     //     si no hay coincidencias, enviar a IA con contexto del negocio
     if (intent.type === 'general') {
       results = searchProducts(message, catalog.productos, { minScore: 30 });
+      if (results.length === 0) {
+        // Segunda pasada: typos de WhatsApp (ej: "sereal" ≈ "cereal" puntúa 21).
+        // El ruido bajo ("eres"→"cereales" = 10) sigue bloqueado por el umbral.
+        results = searchProducts(message, catalog.productos, { minScore: 20 });
+      }
       if (results.length > 0) {
         productContext = buildContext(results, intent);
       } else {

@@ -240,7 +240,8 @@ export function detectIntent(message) {
   return { type: 'general' };
 }
 
-export function searchProducts(message, productos) {
+export function searchProducts(message, productos, options = {}) {
+  const minScore = options.minScore ?? 1;
   // Extraer términos de búsqueda: quitar palabras comunes
   const stopWords = [
     'cuanto', 'cuesta', 'vale', 'sale', 'precio', 'de', 'del', 'el', 'la', 'los', 'las',
@@ -362,7 +363,7 @@ export function searchProducts(message, productos) {
 
       return { product: p, score };
     })
-    .filter((r) => r.score > 0)
+    .filter((r) => r.score >= minScore)
     .sort((a, b) => b.score - a.score);
 
   // Retornar top 5

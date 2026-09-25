@@ -7,6 +7,7 @@ import { normalizeQuery, normalizeProductName } from '../utils/normalize.js';
 export async function handleChat(req, res) {
   const { message, history } = req.body;
   let productContext = '';
+  let intent = null;
   try {
     const catalog = getCatalog();
 
@@ -17,7 +18,7 @@ export async function handleChat(req, res) {
     }
 
     // 1. Detectar intención
-    const intent = detectIntent(message);
+    intent = detectIntent(message);
 
     // 2. Saludo o despedida — responder directamente sin IA
     if (intent.type === 'greeting') {
@@ -59,7 +60,7 @@ export async function handleChat(req, res) {
     //     (puede ser una marca o producto sin palabras clave como "tienen"/"hay");
     //     si no hay coincidencias, enviar a IA con contexto del negocio
     if (intent.type === 'general') {
-      results = searchProducts(message, catalog.productos);
+      results = searchProducts(message, catalog.productos, { minScore: 30 });
       if (results.length > 0) {
         productContext = buildContext(results, intent);
       } else {

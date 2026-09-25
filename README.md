@@ -207,6 +207,14 @@ Para obtener las credenciales de Google:
 - Formulario protegido contra envíos duplicados: el botón "Enviar" se deshabilita
   mientras viaja la petición y un flag interno bloquea envíos simultáneos
   (23-sep-2026: clics repetidos con el backend dormido crearon 4 avisos duplicados)
+- **Vista previa antes de enviar** (`src/components/navbar.ts`): réplica exacta de la
+  card publicada; "← Seguir editando" conserva datos e imagen; Esc/✗ también vuelve
+  al formulario sin perder nada
+- Imagen opcional con **alto fijo (170px) y `object-fit: contain`**: completa, centrada
+  y sin recortes en cards y vista previa
+- Header compacto en una fila (logo + título centrado + botones) y al menos una card
+  completa visible sin scroll en cualquier pantalla
+- Los avisos **rechazados en moderación no aparecen** en la lista pública
 - Mensaje "No hay avisos vigentes publicados." cuando la lista está vacía
 
 ### Chatbot (widget flotante, todas las páginas)
@@ -260,10 +268,19 @@ npm run dev          # http://localhost:3001
 
 #### Endpoints
 
-- `GET /api/avisos` — lista avisos no expirados
-- `POST /api/aviso` — recibe `{ name, phone, email, comment }`, guarda con expiración 30 días
+- `GET /api/avisos` — lista avisos no expirados, **excluye los rechazados en moderación**
+- `POST /api/aviso` — recibe `{ name, phone, email, comment }` (+ `image` multipart
+  opcional), guarda con expiración 30 días y notifica por email
 - `POST /api/avisos/:id/react` — reacciones (like/love, add/remove)
-- Panel admin en `/admin` (requiere `ADMIN_PASSWORD`)
+- `POST /api/admin/login` — valida contraseña del panel
+- `GET /api/admin/avisos` — lista completa con estado de moderación (admin)
+- `GET /api/admin/avisos/:id/image` — descarga imagen del aviso (admin)
+- `PATCH /api/admin/avisos/:id/facebook` — moderación; al rechazar envía email
+  automático con el motivo al anunciante
+- Panel admin en `/admin` (requiere `ADMIN_PASSWORD`): moderación, tarjeta Facebook
+  (imagen contain sin recortes sobre canvas 1200×630) y texto listo para pegar
+
+Ver `server/README.md` para el detalle completo.
 
 ## SEO
 

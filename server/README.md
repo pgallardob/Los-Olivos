@@ -62,6 +62,22 @@ Acción: guarda el aviso en Supabase (vigencia 30 días), envía email de notifi
 
 Lista pública: avisos vigentes (no expirados) **excluyendo los rechazados en moderación** (los que tienen `aviso_facebook.estado = 'rechazado'`).
 
+### POST `/api/avisos/:id/react`
+
+Reacciones públicas (like / love): suma o resta 1 del contador e inserta/elimina el registro en `aviso_reactions`.
+
+### POST `/api/admin/login`
+
+Valida la contraseña del panel (header `x-admin-password` o body `{ "password": "..." }`). Responde `200` o `401`.
+
+### GET `/api/admin/avisos` (requiere `x-admin-password`)
+
+Lista todos los avisos con su estado de moderación (`pendiente` / `publicado` / `rechazado`), observaciones y datos del anunciante.
+
+### GET `/api/admin/avisos/:id/image` (requiere `x-admin-password`)
+
+Descarga la imagen del aviso desde Supabase Storage. La usa el panel admin para dibujar la tarjeta de Facebook sobre el canvas.
+
 ### PATCH `/api/admin/avisos/:id/facebook` (requiere `x-admin-password`)
 
 Actualiza el estado de moderación (`pendiente` / `publicado` / `rechazado`).
@@ -77,11 +93,22 @@ Al rechazar, además:
 - Moderación de avisos con estados pendiente / publicado / rechazado
 - El motivo del rechazo es **obligatorio** y se envía por email al anunciante
 - Generación de tarjeta y texto para publicar en el grupo de Facebook
+- La imagen del aviso se dibuja **completa y centrada (contain, sin recortes)** sobre el fondo de marca del canvas 1200×630
 
 ## Moderación y visibilidad
 
 - La tabla `avisos` guarda el contenido público; `aviso_facebook` (proyecto Supabase de reacciones) guarda el estado de moderación
 - `rechazado` oculta el aviso de la web; `volver a pendiente` lo restaura
+
+## CORS
+
+- Producción: solo los orígenes de `CLIENT_ORIGIN` (con y sin `www`)
+- Desarrollo: se acepta **cualquier** origen `localhost` / `127.0.0.1` en cualquier puerto (vite 5173, preview del IDE con proxy, etc.)
+
+## Imágenes en la web
+
+- La imagen del aviso se muestra en la card pública con **alto fijo (170px) y `object-fit: contain`**: completa, centrada y sin recortes, sobre un fondo oscuro que disimula los espacios
+- La vista previa del formulario replica exactamente la card publicada (máx. 220px)
 
 ## Pruebas locales
 
@@ -93,10 +120,16 @@ node probe-resend.local.mjs
 node probe-resend.local.mjs destino@ejemplo.cl
 ```
 
+> **CUIDADO:** el servidor local usa la MISMA base de datos de producción (Supabase)
+> salvo que cambies `SUPABASE_URL` y las keys en `.env`. Cada aviso creado en pruebas
+> locales aparece en la web real y genera emails. Borra los avisos de prueba
+> (tabla `avisos` + `aviso_images` / `aviso_facebook` / `aviso_reactions` en el
+> proyecto de reacciones) cuando termines.
+
 ## Notas
 
 - **No necesitas tu contraseña de Hotmail.** Resend usa su propia API key.
 - **`onboarding@resend.dev` solo entrega al email dueño de la cuenta Resend.** Para que lleguen los emails a otros destinatarios (incluido el email de rechazo a los anunciantes) debes **verificar tu dominio en Resend** y usarlo en `MAIL_FROM` (ej. `avisos@comercializadoralosolivos.cl`).
 - `MAIL_TO` se puede cambiar en cualquier momento en `.env` sin tocar el código.
 - Si despliegas el backend en un hosting (Render, Railway, etc.), actualiza `VITE_FORM_ENDPOINT` en el `.env` del frontend.
-- El formulario del frontend muestra una **vista previa** del aviso antes de enviarlo (`src/components/navbar.ts`).
+- El formulario del frontend muestra una **vista previa** del aviso antes de enviarlo (`src/components/navbar.ts`): réplica exacta de la card publicada, con botones "← Seguir editando" (conserva los datos y la imagen) y "Enviar ahora". Cerrar con Esc o ✗ también vuelve al formulario sin perder nada.

@@ -21,6 +21,9 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 const baseOrigins = CLIENT_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
 // Incluir tambien la variante con www de cada origen (https://dominio.cl -> https://www.dominio.cl)
 const allowedOrigins = [...new Set(baseOrigins.flatMap((o) => [o, o.replace('://', '://www.')]))];
+// Origenes locales de desarrollo (cualquier puerto: vite 5173, preview del IDE, etc.)
+// Solo localhost/127.0.0.1, no afecta a produccion
+const LOCAL_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 const MAIL_TO = process.env.MAIL_TO || 'pgallardob@hotmail.com';
 const MAIL_FROM = process.env.MAIL_FROM || 'Los Olivos <onboarding@resend.dev>';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -70,7 +73,17 @@ function requireAdmin(req, res, next) {
 
 const resend = new Resend(RESEND_API_KEY);
 
-app.use(cors({ origin: allowedOrigins }));
+function isOriginAllowed(origin) {
+  return allowedOrigins.includes(origin) || LOCAL_ORIGIN_RE.test(origin);
+}
+
+app.use(cors({
+  origin(origin, callback) {
+    // Sin origin (curl, apps nativas) o en lista: permitir
+    if (!origin || isOriginAllowed(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

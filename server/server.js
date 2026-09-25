@@ -114,12 +114,12 @@ app.get('/api/avisos', async (_req, res) => {
       return res.json([]);
     }
 
-    const avisos = data || [];
-
+    let avisos = data || [];
     if (reactionsDb) {
-      const [reactionsRes, imagesRes] = await Promise.all([
+      const [reactionsRes, imagesRes, fbRes] = await Promise.all([
         reactionsDb.from('aviso_reactions').select('aviso_id, likes, loves'),
         reactionsDb.from('aviso_images').select('aviso_id, storage_path'),
+        reactionsDb.from('aviso_facebook').select('aviso_id, estado'),
       ]);
 
       const reactionsMap = {};
@@ -133,12 +133,19 @@ app.get('/api/avisos', async (_req, res) => {
           `${REACTIONS_SUPABASE_URL}/storage/v1/object/public/aviso-images/${img.storage_path}`;
       }
 
+      // Avisos rechazados en moderacion: no se muestran en la pagina publica
+      const rejectedIds = new Set(
+        (fbRes.data || []).filter((fb) => fb.estado === 'rechazado').map((fb) => fb.aviso_id)
+      );
+
       for (const aviso of avisos) {
         const r = reactionsMap[aviso.id] || { likes: 0, loves: 0 };
         aviso.likes = r.likes;
         aviso.loves = r.loves;
         aviso.image_url = imagesMap[aviso.id] || null;
       }
+
+      avisos = avisos.filter((a) => !rejectedIds.has(a.id));
     } else {
       for (const aviso of avisos) {
         aviso.likes = aviso.likes || 0;
@@ -210,14 +217,19 @@ app.post('/api/aviso', upload.single('image'), async (req, res) => {
       });
 
       if (emailError) {
-        console.error('Error de Resend:', emailError);
+        // Registrar el rechazo de Resend con detalle: antes esto era silencioso
+        // y las notificaciones dejaban de llegar sin rastro
+        console.error('[avisos] Resend rechazo el email de notificacion:', JSON.stringify(emailError));
+      } else {
+        console.log(`[avisos] Email de notificacion enviado a ${MAIL_TO}`);
       }
+    } else {
+      console.warn('[avisos] RESEND_API_KEY no configurada: no se envia email de notificacion');
     }
 
     if (!supabase) {
       return res.status(200).json({ ok: true, message: 'Aviso enviado correctamente' });
     }
-
     const now = new Date();
     const expiresAt = new Date(now.getTime() + THIRTY_DAYS_MS);
 
@@ -556,7 +568,52 @@ app.patch('/api/admin/avisos/:id/facebook', requireAdmin, async (req, res) => {
       return res.status(500).json({ error: 'No se pudo actualizar el aviso' });
     }
 
-    return res.json({ ok: true, aviso_id: data.aviso_id, estado: data.estado });
+    // ─── Email automático al anunciante cuando su aviso es rechazado ───
+    let emailSent = false;
+    let emailFailReason = null;
+    if (estado === 'rechazado' && RESEND_API_KEY) {
+      const { data: aviso, error: avisoError } = await supabase
+        .from('avisos')
+        .select('name, email')
+        .eq('id', avisoId)
+        .single();
+
+      if (avisoError || !aviso?.email) {
+        emailFailReason = 'No se pudo obtener el email del anunciante';
+        console.error('[admin] Email rechazo - aviso no encontrado:', avisoError?.message || avisoId);
+      } else {
+        const motivo = typeof observaciones === 'string' && observaciones.trim()
+          ? observaciones.trim()
+          : 'el aviso no cumple con nuestras políticas de publicación';
+
+        const { error: sendError } = await resend.emails.send({
+          from: MAIL_FROM,
+          to: aviso.email,
+          subject: 'Tu aviso fue rechazado — Comercializadora Los Olivos',
+          text: `Hola ${aviso.name},\n\nRevisamos tu aviso y lamentablemente no podemos publicarlo.\n\nMotivo: ${motivo}\n\nSi crees que fue un error o quieres enviar una versión corregida, respóndenos a este correo o escríbenos por WhatsApp al +569 6419 4547.\n\n— Comercializadora Los Olivos\nConcordia 408, Local A, Peñaflor`,
+          html: `
+            <h2>Tu aviso fue rechazado</h2>
+            <p>Hola <strong>${aviso.name}</strong>,</p>
+            <p>Revisamos tu aviso y lamentablemente no podemos publicarlo.</p>
+            <p><strong>Motivo:</strong> ${motivo}</p>
+            <p>Si crees que fue un error o quieres enviar una versión corregida, respóndenos a este correo o escríbenos por WhatsApp al <strong>+569 6419 4547</strong>.</p>
+            <p style="color:#6f8b3f">— Comercializadora Los Olivos<br />Concordia 408, Local A, Peñaflor</p>
+          `,
+        });
+
+        if (sendError) {
+          emailFailReason = sendError.message || 'Error de Resend';
+          console.error('[admin] Resend rechazo el email de rechazo:', JSON.stringify(sendError));
+        } else {
+          emailSent = true;
+          console.log(`[admin] Email de rechazo enviado a ${aviso.email} (aviso #${avisoId})`);
+        }
+      }
+    } else if (estado === 'rechazado') {
+      emailFailReason = 'RESEND_API_KEY no configurada';
+    }
+
+    return res.json({ ok: true, aviso_id: data.aviso_id, estado: data.estado, email_sent: emailSent, email_fail_reason: emailFailReason });
   } catch (err) {
     console.error('[admin] Error update:', err);
     return res.status(500).json({ error: 'Error interno' });

@@ -39,7 +39,7 @@ El servidor corre en `http://localhost:3001`.
 
 ### POST `/api/aviso`
 
-Recibe JSON con:
+Recibe JSON (o multipart con `image`) con:
 
 ```json
 {
@@ -56,9 +56,47 @@ Responde:
 - `400` — `{ error: "Faltan campos obligatorios" }`
 - `500` — `{ error: "No se pudo enviar el aviso" }`
 
+Acción: guarda el aviso en Supabase (vigencia 30 días), envía email de notificación a `MAIL_TO` y prepara la tarjeta de Facebook (pendiente de moderación).
+
+### GET `/api/avisos`
+
+Lista pública: avisos vigentes (no expirados) **excluyendo los rechazados en moderación** (los que tienen `aviso_facebook.estado = 'rechazado'`).
+
+### PATCH `/api/admin/avisos/:id/facebook` (requiere `x-admin-password`)
+
+Actualiza el estado de moderación (`pendiente` / `publicado` / `rechazado`).
+
+Al rechazar, además:
+
+- Se envía **automáticamente un email al anunciante** con el motivo (`observaciones`)
+- El aviso **desaparece de la página pública** (ver GET arriba)
+- La respuesta incluye `email_sent` y `email_fail_reason` para el panel admin
+
+## Panel admin (`/admin`)
+
+- Moderación de avisos con estados pendiente / publicado / rechazado
+- El motivo del rechazo es **obligatorio** y se envía por email al anunciante
+- Generación de tarjeta y texto para publicar en el grupo de Facebook
+
+## Moderación y visibilidad
+
+- La tabla `avisos` guarda el contenido público; `aviso_facebook` (proyecto Supabase de reacciones) guarda el estado de moderación
+- `rechazado` oculta el aviso de la web; `volver a pendiente` lo restaura
+
+## Pruebas locales
+
+```bash
+# Diagnostico de Resend con la config de .env (envia un email de prueba)
+node probe-resend.local.mjs
+
+# Diagnostico apuntando a otro destinatario
+node probe-resend.local.mjs destino@ejemplo.cl
+```
+
 ## Notas
 
 - **No necesitas tu contraseña de Hotmail.** Resend usa su propia API key.
-- Para enviar desde tu propio dominio (ej. `avisos@losolivos.cl`), verifica el dominio en Resend y cambia `MAIL_FROM`.
+- **`onboarding@resend.dev` solo entrega al email dueño de la cuenta Resend.** Para que lleguen los emails a otros destinatarios (incluido el email de rechazo a los anunciantes) debes **verificar tu dominio en Resend** y usarlo en `MAIL_FROM` (ej. `avisos@comercializadoralosolivos.cl`).
 - `MAIL_TO` se puede cambiar en cualquier momento en `.env` sin tocar el código.
 - Si despliegas el backend en un hosting (Render, Railway, etc.), actualiza `VITE_FORM_ENDPOINT` en el `.env` del frontend.
+- El formulario del frontend muestra una **vista previa** del aviso antes de enviarlo (`src/components/navbar.ts`).

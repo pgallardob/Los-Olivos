@@ -396,43 +396,43 @@ export function searchProducts(message, productos, options = {}) {
           const candidates = [qw, ...deDiminutive(qw)];
           for (const tw of targetWords) {
             for (const cw of candidates) {
-            const strictBase = cw !== qw && cw.length <= 4;
-            // Match directo palabra vs palabra
-            if (candMatch(qw, cw, tw)) {
-              const dist = levenshtein(cw, tw);
-              const maxLen = Math.max(cw.length, tw.length);
-              const similarity = 1 - dist / maxLen;
-              const spellScore = Math.round(similarity * 25);
-              if (spellScore > bestSpellScore) bestSpellScore = spellScore;
-              wordMatched = true;
-            }
-            // Match del query contra substrings del target (ej: 'cafee' vs 'cafe' dentro de 'nescafe')
-            // Solo si la palabra del query es una parte sustancial del target
-            if (tw.length > cw.length && cw.length >= tw.length * 0.65) {
-              const subLen = cw.length;
-              for (let i = 0; i <= tw.length - subLen; i++) {
-                const sub = tw.substring(i, i + subLen);
-                if (candMatch(qw, cw, sub)) {
-                  const dist = levenshtein(cw, sub);
-                  const similarity = 1 - dist / cw.length;
-                  const spellScore = Math.round(similarity * 20);
-                  if (spellScore > bestSpellScore) bestSpellScore = spellScore;
+              const strictBase = cw !== qw && cw.length <= 4;
+              // Match directo palabra vs palabra
+              if (candMatch(qw, cw, tw)) {
+                const dist = levenshtein(cw, tw);
+                const maxLen = Math.max(cw.length, tw.length);
+                const similarity = 1 - dist / maxLen;
+                const spellScore = Math.round(similarity * 25);
+                if (spellScore > bestSpellScore) bestSpellScore = spellScore;
+                wordMatched = true;
+              }
+              // Match del query contra substrings del target (ej: 'cafee' vs 'cafe' dentro de 'nescafe')
+              // Solo si la palabra del query es una parte sustancial del target
+              if (tw.length > cw.length && cw.length >= tw.length * 0.65) {
+                const subLen = cw.length;
+                for (let i = 0; i <= tw.length - subLen; i++) {
+                  const sub = tw.substring(i, i + subLen);
+                  if (candMatch(qw, cw, sub)) {
+                    const dist = levenshtein(cw, sub);
+                    const similarity = 1 - dist / cw.length;
+                    const spellScore = Math.round(similarity * 20);
+                    if (spellScore > bestSpellScore) bestSpellScore = spellScore;
+                    wordMatched = true;
+                  }
+                }
+              }
+              // Typo pesado estilo WhatsApp: mismo prefijo (3+ letras) con mayor distancia permitida
+              // (no aplica a bases cortas de diminutivos: "pana"~"panda" seria falso positivo)
+              if (!strictBase && cw.length >= 4 && tw.length >= 4 && cw.slice(0, 3) === tw.slice(0, 3)) {
+                const pfxDist = levenshtein(cw, tw);
+                const pfxMaxLen = Math.max(cw.length, tw.length);
+                if (pfxDist > 0 && pfxDist <= Math.floor(pfxMaxLen / 2)) {
+                  const pfxSim = 1 - pfxDist / pfxMaxLen;
+                  const pfxScore = Math.round(pfxSim * 25);
+                  if (pfxScore > bestSpellScore) bestSpellScore = pfxScore;
                   wordMatched = true;
                 }
               }
-            }
-            // Typo pesado estilo WhatsApp: mismo prefijo (3+ letras) con mayor distancia permitida
-            // (no aplica a bases cortas de diminutivos: "pana"~"panda" seria falso positivo)
-            if (!strictBase && cw.length >= 4 && tw.length >= 4 && cw.slice(0, 3) === tw.slice(0, 3)) {
-              const pfxDist = levenshtein(cw, tw);
-              const pfxMaxLen = Math.max(cw.length, tw.length);
-              if (pfxDist > 0 && pfxDist <= Math.floor(pfxMaxLen / 2)) {
-                const pfxSim = 1 - pfxDist / pfxMaxLen;
-                const pfxScore = Math.round(pfxSim * 25);
-                if (pfxScore > bestSpellScore) bestSpellScore = pfxScore;
-                wordMatched = true;
-              }
-            }
             }
           }
           if (wordMatched) matchedWords++;

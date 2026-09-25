@@ -112,10 +112,35 @@ backend/
 ├── data/
 │   ├── negocio.json              # Info del negocio (manual)
 │   └── productos.json            # Cache de productos (auto-generado)
+├── test-catalog.local.mjs        # Harness: catálogo completo encontrable (regresión)
+├── test-chat.local.mjs           # Batería de queries vía HTTP (requiere servidor)
+├── probe-scores.local.mjs       # Búsqueda directa sin servidor (depuración)
 ├── .env.example
 ├── .gitignore
 └── package.json
 ```
+
+## Pruebas locales
+
+```bash
+# Regresión del catálogo: 344/344 productos encontrables
+node test-catalog.local.mjs
+
+# Batería de queries contra el servidor local (puerto 3002)
+node test-chat.local.mjs "me comi un pancito" "busco papitas" "quien eres tu"
+
+# Búsqueda directa sin servidor (muestra los 5 matches de searchProducts)
+node probe-scores.local.mjs "busco endenate" "sereal"
+```
+
+Casos de regresión clave que deben seguir funcionando:
+
+- "me comi un pancito" → panes (no "gansito" ni "piña")
+- "busco papitas" → papas/pap (no panes)
+- "sereal" → cereales (ruido bajo "acondicionador sedal" tolerado en la lista)
+- "busco endenate" → endulzantes (typo pesado con prefijo)
+- "kiero un cafe" → cafés (k-ortografía)
+- "quien eres tu" → sin productos (ruido "eres"~"cereales" bloqueado por umbral)
 
 ## Seguridad
 
@@ -133,18 +158,41 @@ El motor de búsqueda local implementa un sistema de scoring multicapa:
 
 1. **Match exacto (100 pts)**: nombre del producto = query normalizado
 2. **Match por inclusión (80 pts)**: query contenido en el nombre
-3. **Fuzzy match (60 pts)**: todas las palabras del query en el nombre
+3. **Fuzzy match (60 pts)**: todas las palabras del query en el nombre (incluye bases de diminutivos: "pancito" matchea "pan" en "pan frica")
 4. **Match por categoría (50 pts)**: query coincide con categoría
 5. **Match por marca (45 pts)**: query coincide con marca
-6. **Match parcial (30+ pts)**: al menos una palabra significativa coincide
-7. **Match por similitud ortográfica (hasta 25 pts)**: Levenshtein distance
+6. **Match parcial (30+ pts)**: al menos una palabra significativa coincide (incluye bases de diminutivos)
+7. **Match por similitud ortográfica (hasta 25 pts)**: Levenshtein distance contra la palabra y sus bases de diminutivo
 
-### Tolerancia ortográfica (`normalize.js`)
+Si el query trae diminutivos, la rama fuzzy exige que la **base** (pancito → pan) matchee
+como palabra; eso evita que "pancito"≈"gansito" rankee sobre "pan frica".
+
+### Tolerancia ortográfica (`normalize.js` + `search.service.js`)
 
 - **`levenshtein(a, b)`**: calcula distancia de edición entre dos palabras
 - **`spellMatch(query, target)`**: retorna `true` si la distancia es ≤ 1/3 del largo
 - **Match por substring**: compara el query contra partes de palabras más largas (ej: "cafee" encuentra "cafe" dentro de "nescafe")
 - Ejemplos: "huebo"→"huevo", "arros"→"arroz", "choclate"→"chocolate"
+
+### Escritura estilo WhatsApp
+
+El chatbot está preparado para la ortografía informal de mensajes de texto:
+
+- **Stopwords conversacionales**: "comi", "comia", "yame", "yapu", "xq", "tb", "kiero",
+  "dame", "ensename", etc. se descartan antes de buscar productos, así frases como
+  "me comi un pancito" buscan solo "pancito"
+- **Verbos de intención de producto**: "busco", "quiero/kiero", "necesito" activan la
+  búsqueda de productos con tolerancia amplia ("kiero un cafe" → cafés)
+- **Diminutivos chilenos**: "cafecito"→"cafe", "papitas"→"papas", "galletitas"→"galleta",
+  "pancito"→"pan" (base consonante final con y sin vocal restaurada)
+- **Match estricto para bases cortas de diminutivos** (≤4 letras): solo aceptan match
+  exacto, plural o inclusión ("cafe" dentro de "nescafe"); evita falsos positivos como
+  "pana"~"piña", "pana"~"panda" o "pan"~"pap"
+- **Typo pesado con prefijo compartido**: palabras de 4+ letras que comparten las 3
+  primeras y distan ≤ mitad del largo ("endenate"→"endulzante")
+- **Segunda pasada en intención general**: si la búsqueda estricta (umbral 30) no
+  encuentra nada, reintenta con umbral 20 para typos leves ("sereal"→"cereal", score 21);
+  el ruido bajo sigue bloqueado ("eres"→"cereales" puntúa 10-15)
 
 ### Case-sensitive scoring
 
@@ -160,7 +208,7 @@ El motor de búsqueda local implementa un sistema de scoring multicapa:
 | Despedida | gracias, chao, adios, hasta luego |
 | Negocio | horarios, ubicación, teléfono, WhatsApp, redes, pedidos, delivery, pagos |
 | Producto (precio) | cuanto cuesta, precio de, a cuanto |
-| Producto (stock) | tienen, hay disponible, stock |
+| Producto (stock) | tienen, hay disponible, stock, busco, quiero, kiero, necesito |
 | Producto (sugerencia) | sugiereme, recomiendame, que compro, novedades |
 | Producto (general) | catálogo, lista de productos |
 

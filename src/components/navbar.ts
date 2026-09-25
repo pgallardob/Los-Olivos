@@ -11,12 +11,6 @@ interface AvisoDraft {
   image: File | null;
 }
 
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
 const SWAL_DARK = {
   background: '#161b17',
   color: '#e4eae6',
@@ -104,42 +98,96 @@ async function sendAviso(draft: AvisoDraft): Promise<void> {
 
 function showPreview(draft: AvisoDraft): void {
   const imageUrl = draft.image ? URL.createObjectURL(draft.image) : null;
+  let pendingAction: 'edit' | 'send' | null = null;
 
-  const previewHtml = `
-    <div style="text-align:left">
-      ${
-        imageUrl
-          ? `<img src="${imageUrl}" alt="Imagen del aviso" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;border:1px solid #2a3328;margin-bottom:14px" />`
-          : ''
-      }
-      <div style="background:#0f130f;border:1px solid #232b21;border-radius:12px;padding:16px 18px">
-        <h3 style="margin:0 0 8px;color:#d4ff5e;font-size:1.05rem">${escapeHtml(draft.name)}</h3>
-        <p style="margin:0 0 12px;white-space:pre-wrap;word-break:break-word;line-height:1.55">${escapeHtml(draft.comment)}</p>
-        <p style="margin:0;color:#a7b1ac;font-size:.85rem">📞 ${escapeHtml(draft.phone)} · ✉ ${escapeHtml(draft.email)}</p>
-      </div>
-      <p style="margin:12px 2px 0;color:#a7b1ac;font-size:.82rem;text-align:center">
-        Así se verá tu aviso en la página. Se publica por 30 días.
-      </p>
-    </div>
-  `;
+  const container = document.createElement('div');
+  container.className = 'aviso-preview';
+
+  // Réplica exacta de la card que se publica en avisos.html
+  const card = document.createElement('article');
+  card.className = 'aviso-card aviso-preview__card';
+
+  if (imageUrl) {
+    const img = document.createElement('img');
+    img.className = 'aviso-preview__image';
+    img.src = imageUrl;
+    img.alt = 'Imagen del aviso';
+    card.appendChild(img);
+  }
+
+  const text = document.createElement('div');
+  text.className = 'aviso-preview__text';
+
+  const header = document.createElement('div');
+  header.className = 'aviso-card-header';
+  const nameEl = document.createElement('h3');
+  nameEl.className = 'aviso-card-name';
+  nameEl.textContent = draft.name;
+  const emailEl = document.createElement('span');
+  emailEl.className = 'aviso-card-email';
+  emailEl.textContent = draft.email;
+  header.appendChild(nameEl);
+  header.appendChild(emailEl);
+
+  const bodyEl = document.createElement('p');
+  bodyEl.className = 'aviso-card-body';
+  bodyEl.textContent = draft.comment;
+
+  text.appendChild(header);
+  text.appendChild(bodyEl);
+  card.appendChild(text);
+  container.appendChild(card);
+
+  const note = document.createElement('p');
+  note.className = 'aviso-preview__note';
+  note.textContent = 'Así se verá tu aviso en la página (30 días de vigencia).';
+  container.appendChild(note);
+
+  const actions = document.createElement('div');
+  actions.className = 'quote-form-actions';
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'quote-form-cancel';
+  editBtn.textContent = '← Seguir editando';
+  const sendBtn = document.createElement('button');
+  sendBtn.type = 'button';
+  sendBtn.className = 'quote-form-submit';
+  sendBtn.textContent = 'Enviar ahora';
+  actions.appendChild(editBtn);
+  actions.appendChild(sendBtn);
+  container.appendChild(actions);
 
   void Swal.fire({
     title: 'Vista previa de tu aviso',
-    html: previewHtml,
-    showCancelButton: true,
-    confirmButtonText: 'Enviar ahora',
-    cancelButtonText: '← Seguir editando',
-    cancelButtonColor: '#3a4438',
-    reverseButtons: true,
-    width: '40rem',
-    heightAuto: false,
+    html: container,
+    showConfirmButton: false,
+    showCancelButton: false,
     showCloseButton: true,
-    ...SWAL_DARK,
-  }).then((result) => {
+    background: '#161b17',
+    color: '#e4eae6',
+    width: '34rem',
+    heightAuto: false,
+    customClass: {
+      popup: 'quote-modal',
+      container: 'quote-modal-container',
+      closeButton: 'quote-modal-close',
+    },
+    didOpen: () => {
+      editBtn.addEventListener('click', () => {
+        pendingAction = 'edit';
+        void Swal.close();
+      });
+      sendBtn.addEventListener('click', () => {
+        pendingAction = 'send';
+        void Swal.close();
+      });
+    },
+  }).then(() => {
     if (imageUrl) URL.revokeObjectURL(imageUrl);
-    if (result.isConfirmed) {
+    if (pendingAction === 'send') {
       void sendAviso(draft);
-    } else if (result.dismiss === Swal.DismissReason.cancel) {
+    } else {
+      // "Seguir editando" o cierre (Esc / ✗): volver al formulario sin perder datos
       showQuoteDialog(draft);
     }
   });

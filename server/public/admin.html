@@ -412,7 +412,9 @@
           return r.blob();
         }).then(function (blob) { return createImageBitmap(blob); })
         .then(function (img) {
-          var scale = Math.max(W / img.width, H / img.height);
+          /* Imagen completa centrada (contain): sin recortes, sobre fondo de marca */
+          drawBrandedBg(ctx, W, H);
+          var scale = Math.min(W / img.width, H / img.height);
           var dw = img.width * scale, dh = img.height * scale;
           ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
           drawText();

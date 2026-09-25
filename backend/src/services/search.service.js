@@ -166,6 +166,10 @@ const INTENT_PATTERNS = {
     /disponible\s+/,
     /stock\s+/,
     /quedan\s+/,
+    /busco\s+/,
+    /buscas\s+/,
+    /busca\s+/,
+    /buscando\s+/,
   ],
   product_general: [
     /que\s+productos\s+tienen/,
@@ -256,6 +260,7 @@ export function searchProducts(message, productos, options = {}) {
     'abierto', 'abierta', 'abiertos', 'abiertas', 'cerrado', 'cerrada', 'cerrados', 'cerradas',
     'abren', 'cierran', 'atienden', 'horario', 'horarios',
     'buen', 'buena', 'buenos', 'buenas', 'gracias', 'nada', 'todo', 'todas',
+    'busco', 'busca', 'buscas', 'buscando',
   ];
 
   const words = normalizeQuery(message)

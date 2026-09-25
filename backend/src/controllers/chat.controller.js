@@ -20,6 +20,26 @@ export async function handleChat(req, res) {
     // 1. Detectar intención
     intent = detectIntent(message);
 
+    // 1b. Confirmación (sí/no) de la oferta de redirección a la página de pedidos
+    //     (antes de saludo/despedida: "no gracias" debe caer aquí, no en la despedida)
+    const lastBotMsg = Array.isArray(history)
+      ? [...history].reverse().find((m) => m && m.role === 'assistant')
+      : null;
+    if (lastBotMsg && /quieres que te lleve/i.test(String(lastBotMsg.content || ''))) {
+      if (isAffirmative(message)) {
+        return res.json({
+          reply: '¡Perfecto! Te llevo a la página de productos para que hagas tu pedido. Nos vemos ahí. 👋',
+          redirect_url: ORDER_URL,
+        });
+      }
+      if (isNegative(message)) {
+        return res.json({
+          reply: '¡Sin problema! Seguimos conversando. ¿En qué más te puedo ayudar?',
+        });
+      }
+      // Cualquier otra respuesta: continuar con el flujo normal sin cortar la conversación
+    }
+
     // 2. Saludo o despedida — responder directamente sin IA
     if (intent.type === 'greeting') {
       return res.json({
@@ -30,6 +50,11 @@ export async function handleChat(req, res) {
       return res.json({
         reply: '¡Gracias por consultarnos! Estamos aquí para ayudarte cuando necesites. ¡Hasta pronto! 👋',
       });
+    }
+
+    // 2b. Pedidos online / por WhatsApp: indicar la página y ofrecer redirección
+    if (isOrderQuery(message)) {
+      return res.json({ reply: ORDER_OFFER });
     }
 
     // 3. Si es pregunta de negocio, responder directamente
@@ -292,4 +317,56 @@ function extractVariations(query, results) {
   }
 
   return [...variations].slice(0, 5);
+}
+
+// ─── Pedidos online / WhatsApp: redirección a la página de productos ───
+
+const ORDER_URL = 'https://www.comercializadoralosolivos.cl/productos.html';
+const ORDER_OFFER = `¡Sí! Puedes hacer tu pedido online en nuestra página de productos: ${ORDER_URL}. También recibimos pedidos por WhatsApp al +569 6419 4547. ¿Quieres que te lleve a la página de productos para que hagas tu pedido?`;
+
+function deaccent(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isOrderQuery(message) {
+  const t = deaccent(message);
+  const orderVerb = /\b(pedir|pedido|pedidos|pido|pida|compra|comprar|compro)\b/.test(t);
+  const onlineChannel = /(online|internet|web|pagina|whatsapp|wsp|\bwa\b)/.test(t);
+  return (
+    (orderVerb && onlineChannel) ||
+    /como (puedo |hago |hacer |realizo |realizar )*(un |una )?(pedido|compra)/.test(t) ||
+    /donde (puedo |hago |hacer |realizo |realizar |pido )*(un |una )?(pedido|compra)/.test(t) ||
+    /quiero hacer (un |una )?(pedido|compra)/.test(t)
+  );
+}
+
+const POSITIVE_WORDS = new Set([
+  'si', 'sip', 'sipo', 'simon', 'sep', 'claro', 'que', 'dale', 'ok', 'okay', 'okey',
+  'bueno', 'ya', 'vamos', 'vamonos', 'llevame', 'porfa', 'porfavor', 'por', 'favor',
+  'obvio', 'seguro', 'de', 'una', 'bien', 'vale', 'genial', 'perfecto', 'yes', 'okas',
+  'gracias', 'me', 'anota', 'anotas', 'quiero', 'deseo', 'adelante', 'hagalo', 'hazlo',
+]);
+const POSITIVE_STRONG = /^(si|sip|sipo|simon|sep|claro|dale|ok|okay|okey|bueno|ya|vamos|vamonos|llevame|porfa|porfavor|obvio|seguro|vale|genial|perfecto|yes|okas|adelante)$/;
+
+function isAffirmative(message) {
+  const t = deaccent(message).replace(/[^a-z0-9\s]/g, ' ').trim();
+  if (!t) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  return words.every((w) => POSITIVE_WORDS.has(w)) && words.some((w) => POSITIVE_STRONG.test(w));
+}
+
+const NEGATIVE_WORDS = new Set([
+  'no', 'nah', 'nope', 'nop', 'luego', 'despues', 'mas', 'tarde', 'mejor', 'todavia',
+  'momento', 'gracias', 'nose', 'por', 'ahora', 'poco', 'ne',
+]);
+const NEGATIVE_STRONG = /^(no|nah|nope|nop|luego|despues|mejor|todavia|nose)$/;
+
+function isNegative(message) {
+  const t = deaccent(message).replace(/[^a-z0-9\s]/g, ' ').trim();
+  if (!t) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  return words.every((w) => NEGATIVE_WORDS.has(w)) && words.some((w) => NEGATIVE_STRONG.test(w));
 }

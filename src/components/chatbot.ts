@@ -222,6 +222,9 @@ export function initChatbot(): void {
       } else {
         const data = await res.json();
         addMessage('bot', data.reply || 'No tengo una respuesta en este momento.');
+        if (typeof data.redirect_url === 'string' && data.redirect_url.startsWith('http')) {
+          setTimeout(() => { location.assign(data.redirect_url); }, 1500);
+        }
       }
     } catch {
       hideTyping();

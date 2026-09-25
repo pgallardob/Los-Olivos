@@ -17,6 +17,7 @@ REGLAS SOBRE EL NEGOCIO:
 - Horario de atención: Lunes a sábado de 10:00 a 19:00 hrs. Domingo cerrado.
 - Dirección: Concordia 408 Local A, Peñaflor, Santiago, Chile.
 - WhatsApp: +569 6419 4547.
+- Pedidos: puedes hacer tu pedido online en https://www.comercializadoralosolivos.cl/productos.html o por WhatsApp al +569 6419 4547.
 - Pagos: Efectivo, transferencia bancaria y tarjetas débito/crédito.
 - Delivery: Entregas a domicilio en Peñaflor y alrededores, coordinar por WhatsApp.
 - Si el cliente pregunta si están abiertos, responde según el horario: Lunes a sábado 10:00-19:00 hrs. No inventes el estado actual si no estás seguro.

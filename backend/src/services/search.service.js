@@ -1,5 +1,15 @@
 import { fuzzyMatch, hasWord, normalizeQuery, normalizeProductName, spellMatch, levenshtein } from '../utils/normalize.js';
 
+// Diminutivos chilenos: "cafecito"→"cafe", "papita"→"papa", "toallita"→"toalla"
+function deDiminutive(word) {
+  if (word.length < 5) return [];
+  const m = word.match(/^(.+?)(cito|cita|citos|citas|ito|ita|itos|itas|ico|ica|icos|icas)$/);
+  if (!m || m[1].length < 2) return [];
+  const base = m[1];
+  if (/[aeiou]$/.test(base)) return [base];
+  return [base + 'a', base + 'o'];
+}
+
 const INTENT_PATTERNS = {
   business_saturday: [
     /sabado/,
@@ -141,6 +151,8 @@ const INTENT_PATTERNS = {
     /recomiend[ae]/,
     /que\s+me\s+recomiendas/,
     /que\s+me\s+sugieres/,
+    /algo\s+similar/,
+    /sugerencias/,
     /que\s+compro/,
     /que\s+llevo/,
     /dame\s+una\s+idea/,
@@ -332,11 +344,14 @@ export function searchProducts(message, productos, options = {}) {
         const eligibleWords = words.filter((w) => w.length >= 3);
         for (const qw of eligibleWords) {
           let wordMatched = false;
+          // Candidatos: la palabra y su forma sin diminutivo (cafecito → cafe, papita → papa)
+          const candidates = [qw, ...deDiminutive(qw)];
           for (const tw of targetWords) {
+            for (const cw of candidates) {
             // Match directo palabra vs palabra
-            if (spellMatch(qw, tw)) {
-              const dist = levenshtein(qw, tw);
-              const maxLen = Math.max(qw.length, tw.length);
+            if (spellMatch(cw, tw)) {
+              const dist = levenshtein(cw, tw);
+              const maxLen = Math.max(cw.length, tw.length);
               const similarity = 1 - dist / maxLen;
               const spellScore = Math.round(similarity * 25);
               if (spellScore > bestSpellScore) bestSpellScore = spellScore;
@@ -344,18 +359,19 @@ export function searchProducts(message, productos, options = {}) {
             }
             // Match del query contra substrings del target (ej: 'cafee' vs 'cafe' dentro de 'nescafe')
             // Solo si la palabra del query es una parte sustancial del target
-            if (tw.length > qw.length && qw.length >= tw.length * 0.65) {
-              const subLen = qw.length;
+            if (tw.length > cw.length && cw.length >= tw.length * 0.65) {
+              const subLen = cw.length;
               for (let i = 0; i <= tw.length - subLen; i++) {
                 const sub = tw.substring(i, i + subLen);
-                if (spellMatch(qw, sub)) {
-                  const dist = levenshtein(qw, sub);
-                  const similarity = 1 - dist / qw.length;
+                if (spellMatch(cw, sub)) {
+                  const dist = levenshtein(cw, sub);
+                  const similarity = 1 - dist / cw.length;
                   const spellScore = Math.round(similarity * 20);
                   if (spellScore > bestSpellScore) bestSpellScore = spellScore;
                   wordMatched = true;
                 }
               }
+            }
             }
           }
           if (wordMatched) matchedWords++;

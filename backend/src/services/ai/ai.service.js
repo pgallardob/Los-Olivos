@@ -60,6 +60,19 @@ function verifyPrices(reply, context) {
   return corrected;
 }
 
+const AI_TIMEOUT_FIRST_MS = 15_000;
+const AI_TIMEOUT_RETRY_MS = 10_000;
+
+// Corta la llamada si la IA no responde: sin esto, un cuelgue de la API deja al
+// cliente esperando una respuesta que nunca llega (fetch sin timeout por defecto).
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`La IA no respondió en ${Math.round(ms / 1000)}s`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export async function generateResponse(userMessage, context, intent, history = []) {
   const ai = await getProvider();
   const systemPrompt = getSystemPrompt();
@@ -67,12 +80,12 @@ export async function generateResponse(userMessage, context, intent, history = [
 
   let reply;
   try {
-    reply = await ai.generateResponse(systemPrompt, userMessage, contextBlock, history);
+    reply = await withTimeout(ai.generateResponse(systemPrompt, userMessage, contextBlock, history), AI_TIMEOUT_FIRST_MS);
   } catch (firstError) {
     // Reintento único tras pausa breve (la API falla intermitentemente por límite de tasa)
     console.error('[ai] reintento tras error:', firstError.message);
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    reply = await ai.generateResponse(systemPrompt, userMessage, contextBlock, history);
+    reply = await withTimeout(ai.generateResponse(systemPrompt, userMessage, contextBlock, history), AI_TIMEOUT_RETRY_MS);
   }
   return verifyPrices(reply, context);
 }

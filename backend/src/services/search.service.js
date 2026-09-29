@@ -11,6 +11,50 @@ function deDiminutive(word) {
   return [base, base + 'a', base + 'o'];
 }
 
+// Candidatos de matching por palabra del query:
+// - la palabra tal cual
+// - la base del diminutivo ("pancito"→"pan", "cafecito"→"cafe")
+// - variantes vocálicas ("papita"→"papa"/"papo") SOLO si su familia es más frecuente
+//   en el catálogo que la base. Evita que "pancito" arrastre "paño" y "española"
+//   (variantes "pana"/"pano" = 2 productos) cuando el cliente busca pan (= 6 productos);
+//   "papita"→"papa" (papas fritas) sigue funcionando porque supera a "pap".
+function buildCandidates(words, productos) {
+  const map = new Map();
+  for (const w of words) {
+    const dims = deDiminutive(w);
+    const cands = [w];
+    if (dims.length === 1) {
+      cands.push(dims[0]);
+    } else if (dims.length > 1) {
+      cands.push(dims[0]);
+      if (countProducts(dims.slice(1), productos) > countProducts([dims[0]], productos)) {
+        cands.push(...dims.slice(1));
+      }
+    }
+    map.set(w, cands);
+  }
+  return map;
+}
+
+// Cuantos productos del catálogo contienen alguna de las formas dadas como palabra
+// (igualdad estricta de familia, con plural; SIN tolerancia a errores para que las
+// familias "pap" y "papa" no se fusionen al contar)
+function countProducts(cands, productos) {
+  let n = 0;
+  for (const p of productos) {
+    const nameWords = normalizeProductName(p.nombre).split(' ').filter((tw) => tw.length > 2);
+    if (nameWords.some((tw) => cands.some((c) => sameWordFamily(c, tw)))) n++;
+  }
+  return n;
+}
+
+function sameWordFamily(c, tw) {
+  if (c === tw) return true;
+  const cS = c.length > 3 && c.endsWith('s') ? c.slice(0, -1) : c;
+  const tS = tw.length > 3 && tw.endsWith('s') ? tw.slice(0, -1) : tw;
+  return cS === tS;
+}
+
 const INTENT_PATTERNS = {
   business_saturday: [
     /sabado/,
@@ -212,11 +256,11 @@ function candMatch(qw, c, tw) {
 }
 
 // Fuzzy considerando bases de diminutivos: "pancito" matchea "pan" en "pan frica"
-function fuzzyMatchDim(words, pName) {
+function fuzzyMatchDim(words, pName, candsMap) {
   const targetWords = pName.split(' ').filter((w) => w.length > 2);
   if (targetWords.length === 0) return false;
   return words.every((w) => {
-    const cands = [w, ...deDiminutive(w)];
+    const cands = candsMap.get(w) || [w];
     return targetWords.some((tw) => cands.some((c) => candMatch(w, c, tw)));
   });
 }
@@ -321,6 +365,7 @@ export function searchProducts(message, productos, options = {}) {
 
   const query = words.join(' ');
   const originalQuery = message.trim();
+  const candsMap = buildCandidates(words, productos);
   const originalWords = originalQuery.split(' ').filter((w) => w.length > 1);
 
   // Buscar coincidencias
@@ -348,12 +393,12 @@ export function searchProducts(message, productos, options = {}) {
         if (pOriginalName.includes(originalQuery)) score += 15;
       }
       // Match por todas las palabras en nombre
-      else if (fuzzyMatch(query, p.nombre) || fuzzyMatchDim(words, pName)) {
+      else if (fuzzyMatch(query, p.nombre) || fuzzyMatchDim(words, pName, candsMap)) {
         // Si el query trae diminutivos, exigir que la base matchee como palabra
         // (evita que "pancito"≈"gansito" rankee sobre "pan" en "pan frica")
         const dimWords = words.filter((w) => deDiminutive(w).length > 0);
         const baseOk = dimWords.length === 0 || dimWords.every((w) => {
-          const bases = deDiminutive(w);
+          const bases = (candsMap.get(w) || [w]).slice(1);
           return pName.split(' ').filter((tw) => tw.length > 2).some((tw) => bases.some((b) => candMatch(w, b, tw)));
         });
         if (baseOk) {
@@ -377,7 +422,7 @@ export function searchProducts(message, productos, options = {}) {
       else {
         const matchCount = words.filter((w) =>
           w.length > 2 && (hasWord(pName, w) || pSku.includes(w) || hasWord(pCat, w) || hasWord(pMarca, w) ||
-            deDiminutive(w).some((b) => hasWord(pName, b) || hasWord(pCat, b) || hasWord(pMarca, b)))
+            (candsMap.get(w) || [w]).slice(1).some((b) => hasWord(pName, b) || hasWord(pCat, b) || hasWord(pMarca, b)))
         ).length;
         if (matchCount > 0) {
           score = 30 + matchCount * 5;
@@ -393,7 +438,7 @@ export function searchProducts(message, productos, options = {}) {
         for (const qw of eligibleWords) {
           let wordMatched = false;
           // Candidatos: la palabra y su forma sin diminutivo (cafecito → cafe, papita → papa)
-          const candidates = [qw, ...deDiminutive(qw)];
+          const candidates = candsMap.get(qw) || [qw];
           for (const tw of targetWords) {
             for (const cw of candidates) {
               const strictBase = cw !== qw && cw.length <= 4;

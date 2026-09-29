@@ -40,6 +40,13 @@ export async function handleChat(req, res) {
       // Cualquier otra respuesta: continuar con el flujo normal sin cortar la conversación
     }
 
+    // 1c. Frustración del cliente con los resultados anteriores: responder con empatía
+    //     sin volver a buscar productos (las palabras citadas en la queja — ej: "vienesas
+    //     española" o "pan" — re-contaminan la búsqueda) y sin depender de la IA
+    if (isFrustration(message)) {
+      return res.json({ reply: FRUSTRATION_REPLY });
+    }
+
     // 2. Saludo o despedida — responder directamente sin IA
     if (intent.type === 'greeting') {
       return res.json({
@@ -302,19 +309,20 @@ function getSuggestions(productos) {
 
 function extractVariations(query, results) {
   const normalizedQuery = normalizeQuery(query);
+  const skipWords = ['pack', 'grs', 'gr', 'kg', 'ml', 'cc', 'lt', 'lts', 'x', 'con', 'sin'];
   const variations = new Set();
 
   for (const p of results) {
-    const name = normalizeProductName(p.nombre);
-    // Extraer palabras del nombre que no son la query ni stop words
-    const words = name.split(' ').filter(w =>
-      w.length > 2 &&
-      w !== normalizedQuery &&
-      !['pack', 'grs', 'gr', 'kg', 'ml', 'cc', 'lt', 'lts', 'x', 'con', 'sin'].includes(w)
-    );
+    // Filtrar por la forma normalizada pero mostrar la palabra original del catálogo
+    // (con ñ y tildes: "paño", "española" — antes se mostraba "pano", "espanola")
+    const rawWords = String(p.nombre || '').trim().split(/\s+/).filter(Boolean);
+    const picked = rawWords.filter((raw) => {
+      const wn = normalizeProductName(raw);
+      return wn.length > 2 && wn !== normalizedQuery && !skipWords.includes(wn);
+    });
     // Tomar las 1-2 palabras más significativas del nombre como variación
-    if (words.length > 0) {
-      const variation = words.slice(0, 2).join(' ');
+    if (picked.length > 0) {
+      const variation = picked.slice(0, 2).join(' ');
       if (variation.length > 3) {
         variations.add(variation);
       }
@@ -322,6 +330,26 @@ function extractVariations(query, results) {
   }
 
   return [...variations].slice(0, 5);
+}
+
+// ─── Detección de frustración del cliente ───
+
+const FRUSTRATION_REPLY = 'Disculpa si te confundí 😓 Déjame intentarlo de nuevo: dime el producto exacto que buscas (por ejemplo "pan de molde" o "vienesas la española") y te muestro precio y stock. También puedo ayudarte con horarios, ubicación o cómo hacer pedidos.';
+
+function isFrustration(message) {
+  const t = deaccent(message);
+  return (
+    /no me estas (ayudando|entendiendo|sirviendo)/.test(t) ||
+    /no me (ayudas|entiendes|entiendo|sirve)/.test(t) ||
+    /por ?que me (ofreces|ofrecio|muestras|dices|sugieres|recomiendas|mandas|respondes|respondiste|diste)/.test(t) ||
+    /no (era|es|eran|son) eso/.test(t) ||
+    /eso no (es|era) lo que/.test(t) ||
+    /(te|se) (equivocaste|confundiste)/.test(t) ||
+    /no (te |me )?entendiste/.test(t) ||
+    /no te entiendo/.test(t) ||
+    /no (le )?atinaste/.test(t) ||
+    /(dijiste|respondiste|muestras|ofreces) cualquier cosa/.test(t)
+  );
 }
 
 // ─── Pedidos online / WhatsApp: redirección a la página de productos ───

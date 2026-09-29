@@ -114,6 +114,7 @@ backend/
 │   └── productos.json            # Cache de productos (auto-generado)
 ├── test-catalog.local.mjs        # Harness: catálogo completo encontrable (regresión)
 ├── test-chat.local.mjs           # Batería de queries vía HTTP (requiere servidor)
+├── test-search-cases.local.mjs   # Regresión dirigida: diminutivos, contaminación, frustración (sin servidor)
 ├── probe-scores.local.mjs       # Búsqueda directa sin servidor (depuración)
 ├── .env.example
 ├── .gitignore
@@ -123,8 +124,11 @@ backend/
 ## Pruebas locales
 
 ```bash
-# Regresión del catálogo: 344/344 productos encontrables
+# Regresión del catálogo: 353/353 productos encontrables
 node test-catalog.local.mjs
+
+# Regresión dirigida de búsqueda (sin servidor): diminutivos, contaminación, frustración
+node test-search-cases.local.mjs
 
 # Batería de queries contra el servidor local (puerto 3002)
 node test-chat.local.mjs "me comi un pancito" "busco papitas" "quien eres tu"
@@ -135,8 +139,10 @@ node probe-scores.local.mjs "busco endenate" "sereal"
 
 Casos de regresión clave que deben seguir funcionando:
 
-- "me comi un pancito" → panes (no "gansito" ni "piña")
-- "busco papitas" → papas/pap (no panes)
+- "me comi un pancito" → panes (no "gansito", "piña", "paño amarillo" ni "vienesas la española")
+- "papita" → papas/pap (no panes)
+- "paño" / "pano" → paño amarillo encontrable por su nombre
+- "no me estas ayudando" → respuesta empática (sin re-buscar productos)
 - "sereal" → cereales (ruido bajo "acondicionador sedal" tolerado en la lista)
 - "busco endenate" → endulzantes (typo pesado con prefijo)
 - "kiero un cafe" → cafés (k-ortografía)
@@ -185,6 +191,11 @@ El chatbot está preparado para la ortografía informal de mensajes de texto:
   búsqueda de productos con tolerancia amplia ("kiero un cafe" → cafés)
 - **Diminutivos chilenos**: "cafecito"→"cafe", "papitas"→"papas", "galletitas"→"galleta",
   "pancito"→"pan" (base consonante final con y sin vocal restaurada)
+- **Variantes vocálicas con umbral de frecuencia**: la restauración de vocal
+  ("pan"→"pana"/"pano", "pap"→"papa"/"papo") solo se prueba si su familia es más
+  frecuente en el catálogo que la base. Así "pancito" (pan=6 productos) no arrastra
+  "paño amarillo" ni "vienesas la española" (pana/pano=2 productos), pero "papita"
+  (papa/papas=4 > pap=3) sí encuentra las papas fritas
 - **Match estricto para bases cortas de diminutivos** (≤4 letras): solo aceptan match
   exacto, plural o inclusión ("cafe" dentro de "nescafe"); evita falsos positivos como
   "pana"~"piña", "pana"~"panda" o "pan"~"pap"
@@ -216,10 +227,16 @@ El chatbot está preparado para la ortografía informal de mensajes de texto:
 
 - **Saludos y despedidas**: respondidos directamente sin llamar a Gemini
 - **Info del negocio**: horarios, ubicación, teléfono, WhatsApp, redes, delivery, pagos
+- **Frustración del cliente**: "no me estás ayudando", "por qué me ofreces X si te
+  pregunté por Y" → respuesta empática que pide el producto exacto; no re-busca
+  (las palabras citadas en la queja contaminarían la búsqueda) ni depende de Gemini
 - **Sugerencias**: "sugiereme algo" → 5 productos aleatorios con stock
-- **Consultas genéricas**: si una palabra tiene 4+ resultados, pide aclaración con ejemplos reales
+- **Consultas genéricas**: si una palabra tiene 4+ resultados, pide aclaración con
+  ejemplos reales del catálogo (con ñ y tildes: "paño", "española")
 
 ### Fallback
 
-Si Gemini falla o no responde, el backend muestra los productos encontrados localmente
-con precio y stock, o información de contacto del negocio.
+Si Gemini falla, se cuelga o no responde, el backend muestra los productos encontrados
+localmente con precio y stock, o información de contacto del negocio. Las llamadas a
+Gemini tienen timeout de 15s (reintento único de 10s): un cuelgue de la API nunca deja
+al cliente esperando una respuesta que no llega.
